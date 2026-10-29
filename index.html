@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>kuromursk</title>
+  <style>
+    :root {
+      --bg: #0d0d12;
+      --accent: #7c5cff;
+      --accent-hover: #977dff;
+      --text: #e8e8f0;
+      --muted: #8a8a99;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", system-ui, sans-serif;
+      padding: 2rem;
+    }
+
+    /* фоновое свечение */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 600px;
+      height: 600px;
+      transform: translate(-50%, -60%);
+      background: radial-gradient(circle, rgba(124, 92, 255, 0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    h1 {
+      font-size: clamp(2.5rem, 8vw, 4.5rem);
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      background: linear-gradient(135deg, var(--text) 40%, var(--accent));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      margin-top: 0.75rem;
+      color: var(--muted);
+      font-size: 1.05rem;
+      text-align: center;
+    }
+
+    .clips-btn {
+      margin-top: 2.5rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.9rem 2.2rem;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #fff;
+      text-decoration: none;
+      background: var(--accent);
+      border-radius: 999px;
+      transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+      box-shadow: 0 4px 24px rgba(124, 92, 255, 0.35);
+    }
+
+    .clips-btn:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 28px rgba(124, 92, 255, 0.45);
+    }
+
+    .clips-btn svg {
+      width: 1.2em;
+      height: 1.2em;
+      fill: currentColor;
+    }
+
+    footer {
+      position: absolute;
+      bottom: 1.5rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>kuromursk</h1>
+  <p class="subtitle">Сайт-заглушка — скоро здесь появится что-то интересное</p>
+
+  <a class="clips-btn" href="https://clips.kuromursk.dpdns.org">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+    </svg>
+    Клипы
+  </a>
+
+  <footer>kuromursk</footer>
+</body>
+</html>
