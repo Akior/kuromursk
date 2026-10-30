@@ -2043,7 +2043,7 @@ function mpDebugInfo() {
     status: mpState.status,
     connected: mpState.connected,
     myId: mpState.myId,
-    mqttLoaded: typeof MQTT !== "undefined",
+    mqttLoaded: typeof mqtt !== "undefined" || typeof MQTT !== "undefined",
     broker: MP_BROKERS[mpState.brokerIndex % MP_BROKERS.length],
     ghosts: [...mpState.others.keys()].map((id) => mpState.others.get(id).name),
   };
@@ -2075,7 +2075,7 @@ function mpHandleMessage(m) {
 }
 
 function mpConnect(name) {
-  if (typeof MQTT === "undefined") {
+  if (typeof mqtt === "undefined" && typeof MQTT === "undefined") {
     console.warn("MQTT не загрузился — мультиплеер недоступен (музей работает без него)");
     return;
   }
@@ -2093,7 +2093,7 @@ function mpTryBroker(i) {
   const url = MP_BROKERS[i % MP_BROKERS.length];
   let client;
   try {
-    client = MQTT.connect(url, {
+    client = (window.mqtt || window.MQTT).connect(url, {
       clientId: mpState.myId + Math.random().toString(36).slice(2, 6),
       keepalive: 30,
       clean: true,
