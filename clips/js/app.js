@@ -1990,13 +1990,13 @@ const MP_TOPIC_EVT = MP_ROOM + "/evt";
 const MP_TOPIC_NOW = MP_ROOM + "/now";
 
 const mpState = {
-  client: null,
+  clients: [],          // ПОДКЛЮЧЕНИЯ КО ВСЕМ брокерам: [mqtt.Client | null]
   status: "off",        // off | connecting | on
-  brokerIndex: 0,
   myId: null, connected: false, myName: null,
   others: new Map(), // id -> { sprite, name, x, z, ry, tx, tz, try, lastSeen }
   lastSend: 0,
   reconnectTimer: null,
+  boomKey: null, boomTime: 0,  // дедупликация «boom» (двойной салют от двух брокеров)
   /* --- синхронизация видео (только факт запуска) --- */
   syncQueue: new Map(),     // url -> { id, url, slot, mine } — ОБЩАЯ очередь: что играет у всех
   pendingVideos: new Map(), // url -> инфо, слот ещё не построен (ленивая зона)
@@ -2009,22 +2009,30 @@ function mpDecode(raw) {
   } catch { return null; }
 }
 
+// publish/subscribe на ВСЕ живые брокеры: один клиент MOЖ быть подключён
+// только к доступным ему; чтобы любые пары игроков встречались, шину дублируем
+function mpEachClient(fn) {
+  let alive = 0;
+  for (const c of mpState.clients) {
+    if (c && c.connected) { alive++; try { fn(c); } catch {} }
+  }
+  return alive;
+}
+
 // Событие в общий топик (включая конфетти и остановки video)
 function mpSendRaw(obj) {
-  const c = mpState.client;
-  if (!mpState.connected || !c) return;
-  try { c.publish(MP_TOPIC_EVT, JSON.stringify({ ...obj, id: mpState.myId })); } catch {}
+  const payload = JSON.stringify({ ...obj, id: mpState.myId });
+  mpEachClient((c) => c.publish(MP_TOPIC_EVT, payload));
 }
 
 // retained-список «что играет сейчас» — каждый клиент публикует своё знание,
-// последнее выигрывает; новый вошедший получает его по подписке
+// последний выигрывает; только что вошедший получает его по подписке
 function mpPublishNow() {
-  const c = mpState.client;
-  if (!mpState.connected || !c) return;
   const videos = [...mpState.syncQueue.values()].map((e) => ({
     id: e.mine ? mpState.myId : e.id, url: e.url,
   }));
-  try { c.publish(MP_TOPIC_NOW, JSON.stringify({ t: "now", videos }), { retain: true, qos: 0 }); } catch {}
+  const payload = JSON.stringify({ t: "now", videos });
+  mpEachClient((c) => c.publish(MP_TOPIC_NOW, payload, { retain: true, qos: 0 }));
 }
 
 function mpSendVPlay(url) {
@@ -2044,7 +2052,10 @@ function mpDebugInfo() {
     connected: mpState.connected,
     myId: mpState.myId,
     mqttLoaded: typeof mqtt !== "undefined" || typeof MQTT !== "undefined",
-    broker: MP_BROKERS[mpState.brokerIndex % MP_BROKERS.length],
+    brokers: MP_BROKERS.map((url, i) => ({
+      broker: url.replace("wss://", ""),
+      on: !!(mpState.clients[i] && mpState.clients[i].connected),
+    })),
     ghosts: [...mpState.others.keys()].map((id) => mpState.others.get(id).name),
   };
 }
@@ -2065,7 +2076,15 @@ function mpHandleMessage(m) {
   if (m.id === mpState.myId) return; // свои события не обрабатываем
   if (m.t === "join") { mpAddGhost(m.player); return; }
   if (m.t === "leave") { mpRemoveGhost(m.id); return; }
-  if (m.t === "boom") { confettiExplosionAt(m.x, m.z); return; }
+  if (m.t === "boom") {
+    // при мульти-брокерной шине событие приходит дважды — салют дублируем нельзя
+    const key = m.id + "|" + (m.x || 0) + "|" + (m.z || 0);
+    const now = performance.now();
+    if (mpState.boomKey === key && now - mpState.boomTime < 500) return;
+    mpState.boomKey = key; mpState.boomTime = now;
+    confettiExplosionAt(m.x, m.z);
+    return;
+  }
   if (m.t === "vplay") { mpReceiveVPlay(m); return; }
   if (m.t === "vstop") { mpReceiveVStop(m); return; }
   if (m.t === "now") {
@@ -2079,42 +2098,46 @@ function mpConnect(name) {
     console.warn("MQTT не загрузился — мультиплеер недоступен (музей работает без него)");
     return;
   }
-  if (mpState.client) { try { mpState.client.end(true); } catch {} }
+  for (const c of mpState.clients) { if (c) { try { c.end(true); } catch {} } }
+  mpState.clients = [];
   if (mpState.reconnectTimer) { clearTimeout(mpState.reconnectTimer); mpState.reconnectTimer = null; }
   mpState.myName = name;
   mpState.myId = "km" + Math.random().toString(36).slice(2, 10);
-  mpTryBroker(0);
+  mpStartAll();
 }
 
-// Подключение к брокеру №i; в случае неудачи — следующий (по кругу, с паузой)
-function mpTryBroker(i) {
-  mpState.brokerIndex = i;
+// Стартуем ВСЕ брокеры параллельно: иначе разные игроки могут оказаться на
+// разных брокерах (у кого-то hivemq не пробился — ротация увела их врозь).
+function mpStartAll() {
   mpState.status = "connecting";
-  const url = MP_BROKERS[i % MP_BROKERS.length];
+  for (let i = 0; i < MP_BROKERS.length; i++) mpStartBroker(i);
+}
+
+function mpStartBroker(i) {
+  const url = MP_BROKERS[i];
   let client;
   try {
     client = (window.mqtt || window.MQTT).connect(url, {
-      clientId: mpState.myId + Math.random().toString(36).slice(2, 6),
+      clientId: mpState.myId + "b" + i,
       keepalive: 30,
       clean: true,
-      connectTimeout: 8000,
-      reconnectPeriod: 0,  // авто-реконнект отключаем: сами перебираем брокеров
+      connectTimeout: 10000,
+      reconnectPeriod: 0,  // авто-реконнект отключаем: сами перезапускаем всех
     });
   } catch (e) {
     console.warn("MQTT недоступен:", e);
     return;
   }
-  mpState.client = client;
+  mpState.clients[i] = client;
   console.info("MP: подключаемся к брокеру", url.replace("wss://", ""));
 
   client.on("connect", () => {
-    if (mpState.client !== client) return; // пока соединялись, перебора уже идёт
+    if (mpState.clients[i] !== client) return;
+    client.subscribe([MP_TOPIC_P, MP_TOPIC_EVT, MP_TOPIC_NOW], { qos: 0 });
     mpState.status = "on";
     mpState.connected = true;
     mpNote.classList.remove("hidden");
-    client.subscribe([MP_TOPIC_P, MP_TOPIC_EVT, MP_TOPIC_NOW], { qos: 0 });
-    console.info("MP: соединение установлено," +
-      " статус хоста не нужен (все равнозначны)");
+    console.info("MP: подключён:", url.replace("wss://", ""), "(брокер", i + 1, "/", MP_BROKERS.length + ")");
     // retained «что играет» придёт по подписке; и сразу публикуем своё знание
     mpPublishNow();
   });
@@ -2125,28 +2148,33 @@ function mpTryBroker(i) {
     mpHandleMessage(m);
   });
 
-  const rotate = () => {
-    if (mpState.client !== client) return; // уже переключились на другого
+  const die = () => {
+    if (mpState.clients[i] !== client) return;
+    mpState.clients[i] = null;
     try { client.end(true); } catch {}
-    if (mpState.client === client) mpState.client = null;
-    mpState.status = "off";
-    mpState.connected = false;
-    const attempt = i + 1;
-    const delay = attempt % MP_BROKERS.length === 0 ? 15000 : 500; // все брокеры обошли — пауза
-    if (!mpState.reconnectTimer) {
-      mpState.reconnectTimer = setTimeout(() => {
-        mpState.reconnectTimer = null;
-        if (started) mpTryBroker(attempt);
-      }, delay);
-    }
+    mpMaybeRestart();
   };
 
-  client.on("close", rotate);
-  client.on("offline", rotate);
+  client.on("close", die);
+  client.on("offline", die);
   client.on("error", (e) => {
     console.warn("MP: брокер недоступен:", (e && e.message) || e);
-    rotate();
+    die();
   });
+}
+
+// Все брокеры молчат — перезапуск всей шины через 15 с
+function mpMaybeRestart() {
+  if (mpState.clients.some((c) => c)) return; // есть ещё живое соединение
+  mpState.connected = false;
+  mpState.status = "off";
+  if (mpState.reconnectTimer) return;
+  if (!started) return;
+  console.info("MP: все брокеры молчат — перезапуск через 15 с");
+  mpState.reconnectTimer = setTimeout(() => {
+    mpState.reconnectTimer = null;
+    if (started) { mpState.clients = []; mpStartAll(); }
+  }, 15000);
 }
 
 // (обрыв обрабатывается целиком через rotate() внутри mpTryBroker)
@@ -2193,18 +2221,14 @@ function mpRemoveGhost(id) {
 
 function mpTick(t, dt) {
   if (!mpState.connected) return;
-  // отправляем своё состояние ~12 Гц (имя внутри — новые призраки сами появятся)
+  // отправляем своё состояние ~12 Гц на все живые брокеры
   if (t - mpState.lastSend > 0.08) {
     mpState.lastSend = t;
-    const c = mpState.client;
-    if (c) {
-      try {
-        c.publish(MP_TOPIC_P, JSON.stringify({
-          t: "p", id: mpState.myId, name: mpState.myName,
-          x: camera.position.x, z: camera.position.z, ry: yaw,
-        }));
-      } catch {}
-    }
+    const payload = JSON.stringify({
+      t: "p", id: mpState.myId, name: mpState.myName,
+      x: camera.position.x, z: camera.position.z, ry: yaw,
+    });
+    mpEachClient((c) => c.publish(MP_TOPIC_P, payload));
   }
   // призраки без новостей дольше 10 с — удаляем (замена серверного heartbeat)
   for (const [id, g] of [...mpState.others]) {
