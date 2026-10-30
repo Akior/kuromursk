@@ -133,6 +133,7 @@ const ROOMS = [
 
 window.HALL = {
   ready: false, count: 0, previews: 0,
+  mp: () => mpDebugInfo(), // диагностика мультиплеера: role/conns/ghosts
   volume: () => (listener ? listener.getMasterVolume() : null),
   audioState: () => (listener ? listener.context.state : "no-context"),
   musicPlaying: () => !!(music && music.isPlaying),
@@ -1593,10 +1594,12 @@ function togglePlayback(slot) {
 
 /* --- приёмная часть: только факт запуска/остановки, рассинхрон игнорируем --- */
 
-// у кого-то началось видео — запускаем у себя с нуля
-function mpReceiveVPlay(e) {
+// у кого-то началось видео — запускаем у себя с нуля; silent=true из retained-списка,
+// (чтобы массовый приём не вызывал лавину пересылок «что играет»)
+function mpReceiveVPlay(e, silent) {
   if (e.id === mpState.myId) return; // это наше собственное, уже играет
   const url = String(e.url || "");
+  if (!url) return;
   // это видео сейчас играет у нас (наша персональная очередь) — мы источник истины
   const existing = mpState.syncQueue.get(url);
   if (existing && existing.mine) return;
@@ -1610,6 +1613,7 @@ function mpReceiveVPlay(e) {
     // слот ещё не построен (ленивая зона) — запомним и попробуем позже
     mpState.pendingVideos.set(url, entry);
   }
+  if (!silent) mpPublishNow(); // retained «что играет» — обновляем нашим знанием
 }
 
 // визуально включить чужое видео на экране (картинка общего 3D-экрана
@@ -1636,6 +1640,7 @@ function mpReceiveVStop(m) {
   mpState.pendingVideos.delete(url);
   const slot = mpSlotByUrl(url);
   if (slot) stopPlayback(slot);
+  mpPublishNow();
 }
 
 // дозапуск отложенных (слоты ленивых зон могли догрузиться), раз в полсекунды
@@ -1666,7 +1671,7 @@ function confettiExplosion() {
   const p = camera.position;
   confettiExplosionAt(p.x, p.z);
   // сетевой режим: все призраки увидят салют на нашей позиции
-  if (mpState.connected && mpState.role !== "none") {
+  if (mpState.connected) {
     mpSendRaw({ t: "boom", x: p.x, z: p.z });
   }
 }
@@ -1956,30 +1961,38 @@ function ghostSprite(name) {
 
 /* ============================== МУЛЬТИПЛЕЕР ============================== */
 /*
- * Транспорт: PeerJS (WebRTC data-каналы, бесплатное signaling-облако).
- * Раньше межкомнатное соединение было WebSocket'ом к server.js (/mp) — после
- * переезда на GitHub Pages сервера нет, роль хаба играет один из игроков.
+ * Транспорт: MQTT-релей поверх публичных брокеров (WebSocket). Замена двух
+ * прежних схем: WebSocket-сервера в server.js (/mp) и P2P-PeerJS.
  *
- * Схема host/client:
- *   • первый вошедший игрок занимает фиксированный peer-id MP_ROOM_ID и
- *     становится хостом: собирает hello/p, ведёт список игроков, рассылает
- *     init/join/leave/state (радиус 40 м, 5 Гц) и ретранслирует vplay/vstop/boom;
- *   • остальные подключаются клиентами с произвольным peer-id;
- *   • хост ушёл — через 3–5 с любой клиент пробует занять роль хоста;
- * если занято — снова клиент (само устаканивается).
+ * Почему MQTT, а не PeerJS: P2P без TURN не пробивается между сетями многих
+ * российских провайдеров (похоже, именно это случилось в проде: «друг друга
+ * не видно»), а бесплатных публичных TURN почти не осталось. MQTT-брокер —
+ * это уже готовый релей: каждый клиент публикует своё состояние и слушает
+ * остальных. Нет избрания хоста, нет RTCPeerConnection, всё доходит любых
+ * сетей. Объём данных мизерный (позиции и события).
  *
- * Формат сообщений полностью совпадает со старым WebSocket-протоколом
- * (RFC 6455 реализация в server.js): JSON { t: "hello"|"p"|"boom"|"vplay"|"vstop" }.
+ * Топики (общие для всех):
+ *   kuromursk-clips-7g2xvq/p    — позиции {t:"p", id, name, x, z, ry} 12 Гц
+ *   kuromursk-clips-7g2xvq/evt  — события {t:"vplay"|"vstop"|"boom", id, ...}
+ *   kuromursk-clips-7g2xvq/now  — retained: список «что играет прямо сейчас»
+ *     {t:"now", videos:[{id,url},...]} — так что поздний вошедший сразу видит
+ *     картину в фильме (замена серверного init.videos).
+ * Призраки очищаются локально по lastSeen > 10 с, дубликаты имён — по месту
+ * отрисовки (суффикс «Мур 2»).
  */
-const MP_ROOM_ID = "kuromursk-clips-room-7g2xvq";
+const MP_BROKERS = [
+  "wss://broker.hivemq.com:8884/mqtt",
+  "wss://broker.emqx.io:8084/mqtt",
+];
+const MP_ROOM = "kuromursk-clips-7g2xvq";
+const MP_TOPIC_P = MP_ROOM + "/p";
+const MP_TOPIC_EVT = MP_ROOM + "/evt";
+const MP_TOPIC_NOW = MP_ROOM + "/now";
 
 const mpState = {
-  peer: null,
-  role: "none",           // none | claiming | host | client
-  conns: new Map(),       // роль host: peer-id -> DataConnection
-  hostConn: null,         // роль client: DataConnection к хосту
-  players: new Map(),     // роль host: peer-id -> { name, x, z, ry, lastSeen }
-  names: new Set(),       // роль host: занятые имена (для суффиксов «Мур 2»)
+  client: null,
+  status: "off",        // off | connecting | on
+  brokerIndex: 0,
   myId: null, connected: false, myName: null,
   others: new Map(), // id -> { sprite, name, x, z, ry, tx, tz, try, lastSeen }
   lastSend: 0,
@@ -1989,293 +2002,167 @@ const mpState = {
   pendingVideos: new Map(), // url -> инфо, слот ещё не построен (ленивая зона)
 };
 
-// Одно место отправки: хост рассылает всем клиентам, клиент — хосту.
-function mpSendRaw(obj) {
-  const s = JSON.stringify(obj);
-  if (mpState.role === "host") {
-    for (const conn of mpState.conns.values()) {
-      if (conn.open) { try { conn.send(s); } catch {} }
-    }
-  } else if (mpState.hostConn && mpState.hostConn.open) {
-    try { mpState.hostConn.send(s); } catch {}
-  }
+function mpDecode(raw) {
+  try {
+    const s = typeof raw === "string" ? raw : new TextDecoder().decode(raw);
+    return JSON.parse(s);
+  } catch { return null; }
 }
 
-// Ретрансляция хостом: всем, кроме отправителя (как это делал server.js)
-function mpRelay(obj, exceptPeer) {
-  const s = JSON.stringify(obj);
-  for (const [id, conn] of mpState.conns) {
-    if (id === exceptPeer || !conn.open) continue;
-    try { conn.send(s); } catch {}
-  }
+// Событие в общий топик (включая конфетти и остановки video)
+function mpSendRaw(obj) {
+  const c = mpState.client;
+  if (!mpState.connected || !c) return;
+  try { c.publish(MP_TOPIC_EVT, JSON.stringify({ ...obj, id: mpState.myId })); } catch {}
+}
+
+// retained-список «что играет сейчас» — каждый клиент публикует своё знание,
+// последнее выигрывает; новый вошедший получает его по подписке
+function mpPublishNow() {
+  const c = mpState.client;
+  if (!mpState.connected || !c) return;
+  const videos = [...mpState.syncQueue.values()].map((e) => ({
+    id: e.mine ? mpState.myId : e.id, url: e.url,
+  }));
+  try { c.publish(MP_TOPIC_NOW, JSON.stringify({ t: "now", videos }), { retain: true, qos: 0 }); } catch {}
 }
 
 function mpSendVPlay(url) {
   mpSendRaw({ t: "vplay", url });
+  mpPublishNow();
 }
 
 function mpSendVStop(url) {
   mpSendRaw({ t: "vstop", url });
+  mpPublishNow();
 }
+
+// диагностическая сводка: смотреть в консоли `window.HALL.mp()`
+function mpDebugInfo() {
+  return {
+    status: mpState.status,
+    connected: mpState.connected,
+    myId: mpState.myId,
+    mqttLoaded: typeof MQTT !== "undefined",
+    broker: MP_BROKERS[mpState.brokerIndex % MP_BROKERS.length],
+    ghosts: [...mpState.others.keys()].map((id) => mpState.others.get(id).name),
+  };
+}
+
 
 // найти картину-слот по url видео
 function mpSlotByUrl(url) {
   return currentSlots.find((s) => s.video.url === url) || null;
 }
 
-// Единая обработка входящих сообщений (тот же протокол, что был у /mp)
+// Единая обработка входящих сообщений
 function mpHandleMessage(m) {
-  if (m.t === "init") {
-    mpState.myId = m.you;
-    for (const p of m.players) mpAddGhost(p);
-    // при заходе сразу включаем всё, что уже играет у остальных
-    for (const e of m.videos || []) mpReceiveVPlay(e);
-    mpState.connected = true;
-    mpNote.classList.remove("hidden");
+  if (m.t === "p") {
+    if (m.id === mpState.myId) return;
+    mpUpdateGhost(m);
     return;
   }
+  if (m.id === mpState.myId) return; // свои события не обрабатываем
   if (m.t === "join") { mpAddGhost(m.player); return; }
   if (m.t === "leave") { mpRemoveGhost(m.id); return; }
   if (m.t === "boom") { confettiExplosionAt(m.x, m.z); return; }
   if (m.t === "vplay") { mpReceiveVPlay(m); return; }
   if (m.t === "vstop") { mpReceiveVStop(m); return; }
-  if (m.t === "state") {
-    for (const p of m.players) mpUpdateGhost(p);
-    mpCount.textContent = String(m.players.length);
+  if (m.t === "now") {
+    for (const e of m.videos || []) mpReceiveVPlay(e, true);
     return;
   }
 }
 
 function mpConnect(name) {
-  if (mpState.role !== "none") return;
-  if (typeof Peer === "undefined") {
-    console.warn("PeerJS не загрузился — мультиплеер недоступен (музей работает без него)");
+  if (typeof MQTT === "undefined") {
+    console.warn("MQTT не загрузился — мультиплеер недоступен (музей работает без него)");
     return;
   }
+  if (mpState.client) { try { mpState.client.end(true); } catch {} }
   if (mpState.reconnectTimer) { clearTimeout(mpState.reconnectTimer); mpState.reconnectTimer = null; }
   mpState.myName = name;
-  mpTryClaim(name, 0);
+  mpState.myId = "km" + Math.random().toString(36).slice(2, 10);
+  mpTryBroker(0);
 }
 
-// Попытка занять роль хоста: peer-id фикс.
-function mpTryClaim(name, attempt) {
-  mpState.role = "claiming";
-  let peer;
+// Подключение к брокеру №i; в случае неудачи — следующий (по кругу, с паузой)
+function mpTryBroker(i) {
+  mpState.brokerIndex = i;
+  mpState.status = "connecting";
+  const url = MP_BROKERS[i % MP_BROKERS.length];
+  let client;
   try {
-    peer = new Peer(MP_ROOM_ID, { debug: 0 });
+    client = MQTT.connect(url, {
+      clientId: mpState.myId + Math.random().toString(36).slice(2, 6),
+      keepalive: 30,
+      clean: true,
+      connectTimeout: 8000,
+      reconnectPeriod: 0,  // авто-реконнект отключаем: сами перебираем брокеров
+    });
   } catch (e) {
-    console.warn("PeerJS недоступен:", e);
+    console.warn("MQTT недоступен:", e);
     return;
   }
-  mpState.peer = peer;
+  mpState.client = client;
+  console.info("MP: подключаемся к брокеру", url.replace("wss://", ""));
 
-  peer.on("open", () => {
-    mpState.role = "host";
-    mpState.myId = MP_ROOM_ID;
-    mpBecomeHost();
+  client.on("connect", () => {
+    if (mpState.client !== client) return; // пока соединялись, перебора уже идёт
+    mpState.status = "on";
+    mpState.connected = true;
+    mpNote.classList.remove("hidden");
+    client.subscribe([MP_TOPIC_P, MP_TOPIC_EVT, MP_TOPIC_NOW], { qos: 0 });
+    console.info("MP: соединение установлено," +
+      " статус хоста не нужен (все равнозначны)");
+    // retained «что играет» придёт по подписке; и сразу публикуем своё знание
+    mpPublishNow();
   });
 
-  peer.on("error", (err) => {
-    const type = err && err.type;
-    if (type === "unavailable-id") {
-      // кто-то уже хост — подключаемся клиентом
-      try { peer.destroy(); } catch {}
-      mpState.peer = null;
-      mpConnectAsClient(name);
-    } else {
-      // signaling не отвечает и пр. — повторяем выбор роли позже
-      try { peer.destroy(); } catch {}
-      mpState.peer = null;
-      mpState.role = "none";
-      const delay = Math.min(3000 + attempt * 3000, 30000);
+  client.on("message", (topic, payload) => {
+    const m = mpDecode(payload);
+    if (!m || typeof m !== "object") return;
+    mpHandleMessage(m);
+  });
+
+  const rotate = () => {
+    if (mpState.client !== client) return; // уже переключились на другого
+    try { client.end(true); } catch {}
+    if (mpState.client === client) mpState.client = null;
+    mpState.status = "off";
+    mpState.connected = false;
+    const attempt = i + 1;
+    const delay = attempt % MP_BROKERS.length === 0 ? 15000 : 500; // все брокеры обошли — пауза
+    if (!mpState.reconnectTimer) {
       mpState.reconnectTimer = setTimeout(() => {
         mpState.reconnectTimer = null;
-        if (started) mpTryClaim(name, attempt + 1);
+        if (started) mpTryBroker(attempt);
       }, delay);
     }
+  };
+
+  client.on("close", rotate);
+  client.on("offline", rotate);
+  client.on("error", (e) => {
+    console.warn("MP: брокер недоступен:", (e && e.message) || e);
+    rotate();
   });
 }
 
-function mpBecomeHost() {
-  const peer = mpState.peer;
-  mpState.connected = true;
-  mpNote.classList.remove("hidden");
-  mpCount.textContent = "0";
-  // хост — тоже игрок: собственная запись в списке
-  mpState.players.set(MP_ROOM_ID, {
-    name: mpState.myName || "Хост",
-    x: camera.position.x, z: camera.position.z, ry: yaw,
-    lastSeen: performance.now(),
-  });
-  mpState.names.add(mpState.players.get(MP_ROOM_ID).name);
-
-  peer.on("connection", (conn) => {
-    mpState.conns.set(conn.peer, conn);
-    conn.on("data", (raw) => {
-      let m;
-      try { m = JSON.parse(raw); } catch { return; }
-      if (m.t === "hello") { mpHostHello(conn, m); return; }
-      if (m.t === "p") {
-        const p = mpState.players.get(conn.peer);
-        if (p) {
-          p.x = +m.x; p.z = +m.z; p.ry = +m.ry;
-          p.lastSeen = performance.now();
-        }
-        return;
-      }
-      if (m.t === "vplay" || m.t === "vstop" || m.t === "boom") {
-        mpHandleMessage(m);   // сам хост тоже видит/слышит результат
-        mpRelay(m, conn.peer);
-      }
-    });
-    conn.on("close", () => mpHostDrop(conn.peer));
-    conn.on("error", () => mpHostDrop(conn.peer));
-  });
-
-  // 5 Гц: пересылка позиций тем, рядом с кем они | 10 с: сбор мёртвых
-  mpState.hostTick = setInterval(() => mpHostBroadcast(), 200);
-}
-
-function mpHostHello(conn, m) {
-  let name = String(m.name || "Гость").trim().slice(0, 32) || "Гость";
-  if (mpState.names.has(name)) {
-    let n = 2;
-    while (mpState.names.has(`${name} ${n}`) && n < 100) n++;
-    name = `${name} ${n}`; // как у server.js: дубликаты получают суффикс
-  }
-  mpState.names.add(name);
-  mpState.players.set(conn.peer, {
-    name, x: 0, z: 0, ry: 0, lastSeen: performance.now(),
-  });
-  // init: как на WS — свои id, список игроков, что уже играет
-  conn.send(JSON.stringify({
-    t: "init",
-    you: conn.peer,
-    players: [...mpState.players].map(([id, p]) => ({ id, name: p.name, x: p.x, z: p.z, ry: p.ry })),
-    videos: [...mpState.syncQueue.values()].map((e) => ({ id: e.id, url: e.url })),
-  }));
-  mpRelay({ t: "join", player: { id: conn.peer, name, x: 0, z: 0, ry: 0 } }, conn.peer);
-}
-
-// каждому клиенту — только игроки в радиусе 40 м (как на server.js)
-function mpHostBroadcast() {
-  const me = mpState.players.get(MP_ROOM_ID);
-  if (me) {
-    me.x = camera.position.x; me.z = camera.position.z; me.ry = yaw;
-    me.lastSeen = performance.now();
-  }
-  const now = performance.now();
-  // выбросить мёртвых (нет кадров дольше 10 с)
-  for (const [id, p] of mpState.players) {
-    if (id === MP_ROOM_ID) continue;
-    if (now - p.lastSeen > 10000) mpHostDrop(id);
-  }
-  let nearSelf = 0;
-  for (const [id, p] of mpState.players) {
-    if (id === MP_ROOM_ID) continue;
-    const dx = p.x - me.x, dz = p.z - me.z;
-    if (dx * dx + dz * dz <= 40 * 40) nearSelf++;
-  }
-  mpCount.textContent = String(nearSelf);
-
-  for (const [id, conn] of mpState.conns) {
-    if (!conn.open) continue;
-    const self = mpState.players.get(id);
-    if (!self) continue;
-    const near = [];
-    for (const [oid, p] of mpState.players) {
-      if (oid === id) continue;
-      const dx = p.x - self.x, dz = p.z - self.z;
-      if (dx * dx + dz * dz <= 40 * 40) {
-        near.push({ id: oid, name: p.name, x: p.x, z: p.z, ry: p.ry });
-      }
-    }
-    try { conn.send(JSON.stringify({ t: "state", players: near })); } catch {}
-  }
-}
-
-function mpHostDrop(id) {
-  const conn = mpState.conns.get(id);
-  if (conn) { try { conn.close(); } catch {} }
-  mpState.conns.delete(id);
-  const info = mpState.players.get(id);
-  if (info) mpState.names.delete(info.name);
-  if (mpState.players.delete(id)) {
-    mpRelay({ t: "leave", id });
-  }
-}
-
-// клиент: произвольный peer-id, data-канал к хосту
-function mpConnectAsClient(name) {
-  mpState.role = "client";
-  let peer;
-  try {
-    peer = new Peer(null, { debug: 0 });
-  } catch (e) {
-    console.warn("PeerJS недоступен:", e);
-    return;
-  }
-  mpState.peer = peer;
-
-  peer.on("open", () => {
-    const conn = peer.connect(MP_ROOM_ID, { reliable: true });
-    mpState.hostConn = conn;
-    conn.on("open", () => {
-      conn.send(JSON.stringify({ t: "hello", name: name }));
-    });
-    conn.on("data", (raw) => {
-      let m;
-      try { m = JSON.parse(raw); } catch { return; }
-      mpHandleMessage(m);
-    });
-    conn.on("close", () => mpHostLost(name));
-    conn.on("error", () => mpHostLost(name));
-  });
-
-  peer.on("error", (err) => {
-    const type = err && err.type;
-    if (type === "peer-unavailable") {
-      // хост исчез — переквалифицируемся в хост
-      try { peer.destroy(); } catch {}
-      mpState.peer = null; mpState.hostConn = null; mpState.role = "none";
-      mpHostLost(name);
-    } else {
-      // гонка ролей — клиент сам по себе не получает unavailable-id,
-      // поэтому просто переподключаемся
-      try { peer.destroy(); } catch {}
-      mpState.role = "none";
-      mpHostLost(name);
-    }
-  });
-}
-
-function mpHostLost(name) {
-  mpState.connected = false;
-  mpState.hostConn = null;
-  mpState.role = "none";
-  mpState.myId = null;
-  // удалить всех призраков
-  for (const id of [...mpState.others.keys()]) mpRemoveGhost(id);
-  // перевыбор хоста через 3–5 с
-  if (mpState.reconnectTimer) { clearTimeout(mpState.reconnectTimer); }
-  if (started) {
-    mpState.reconnectTimer = setTimeout(() => {
-      mpState.reconnectTimer = null;
-      const myName = mpState.myName || name || "Гость";
-      mpTryClaim(myName, 0);
-    }, 3000 + Math.random() * 2000);
-  }
-  // хост-интервал больше не нужен
-  if (mpState.hostTick) { clearInterval(mpState.hostTick); mpState.hostTick = null; }
-}
+// (обрыв обрабатывается целиком через rotate() внутри mpTryBroker)
 
 function mpAddGhost(p) {
   if (p.id === mpState.myId || mpState.others.has(p.id)) return;
-  const sprite = ghostSprite(p.name); // теперь Group: тело-билборд + стрелка направления
+  // дубликаты имён — суффикс по месту (раньше делал сервер)
+  let name = String(p.name || "Гость");
+  for (const g of mpState.others.values()) {
+    if (g.name === name) { name = `${name} 2`; }
+  }
+  const sprite = ghostSprite(name); // теперь Group: тело-билборд + стрелка направления
   sprite.position.set(p.x, 1.35, p.z);
   scene.add(sprite);
   mpState.others.set(p.id, {
-    sprite, name: p.name,
+    sprite, name,
     x: p.x, z: p.z, ry: p.ry,
     tx: p.x, tz: p.z, try: p.ry,
     phase: Math.random() * 6.28,
@@ -2306,19 +2193,24 @@ function mpRemoveGhost(id) {
 
 function mpTick(t, dt) {
   if (!mpState.connected) return;
-  // отправляем свою позицию ~12 Гц (хост — записывает свою в общий список сам)
+  // отправляем своё состояние ~12 Гц (имя внутри — новые призраки сами появятся)
   if (t - mpState.lastSend > 0.08) {
     mpState.lastSend = t;
-    if (mpState.role === "host") {
-      const me = mpState.players.get(MP_ROOM_ID);
-      if (me) {
-        me.x = camera.position.x; me.z = camera.position.z; me.ry = yaw;
-        me.lastSeen = performance.now();
-      }
-    } else if (mpState.hostConn && mpState.hostConn.open) {
-      mpState.hostConn.send(JSON.stringify({ t: "p", x: camera.position.x, z: camera.position.z, ry: yaw }));
+    const c = mpState.client;
+    if (c) {
+      try {
+        c.publish(MP_TOPIC_P, JSON.stringify({
+          t: "p", id: mpState.myId, name: mpState.myName,
+          x: camera.position.x, z: camera.position.z, ry: yaw,
+        }));
+      } catch {}
     }
   }
+  // призраки без новостей дольше 10 с — удаляем (замена серверного heartbeat)
+  for (const [id, g] of [...mpState.others]) {
+    if (t - g.lastSeen > 10) mpRemoveGhost(id);
+  }
+  mpCount.textContent = String(mpState.others.size);
   // интерполяция чужих призраков
   const k = 1 - Math.exp(-8 * dt);
   for (const g of mpState.others.values()) {
