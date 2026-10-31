@@ -115,7 +115,7 @@
       flex-direction: column;
       gap: 0.4rem;
       position: absolute;
-      top: calc(100% + 0.5rem);
+      top: 100%;
       left: 50%;
       transform: translateX(-50%) translateY(-6px);
       z-index: 10;
@@ -125,6 +125,7 @@
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.22s ease, transform 0.22s ease;
+      padding-top: 0.5rem; /* мостик между кнопкой и списком, чтобы ховер не рвался */
     }
 
     .group:hover ul.submenu, .group:focus-within ul.submenu {
@@ -198,11 +199,11 @@
         </ul>
       </div>
 
-      <!-- группа 2: О КуроМэре -->
+      <!-- группа 2: О КуроМур -->
       <div class="group">
-        <button class="gbtn" type="button" aria-haspopup="true" aria-expanded="false">О КуроМэре</button>
+        <button class="gbtn" type="button" aria-haspopup="true" aria-expanded="false">О КуроМур</button>
         <ul class="submenu">
-          <li><a class="i-info" href="https://kuromurinfo.carrd.co/" target="_blank" rel="noopener">О КуроМур</a></li>
+          <li><a class="i-info" href="https://kuromurinfo.carrd.co/" target="_blank" rel="noopener">Контакты</a></li>
           <li>
             <a class="i-twitch" href="https://www.twitch.tv/kuromur" target="_blank" rel="noopener">
               Стримы КуроМур
