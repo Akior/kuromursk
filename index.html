@@ -4,13 +4,25 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>kuromursk</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,500;0,700;0,800;1,300&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0d0d12;
-      --accent: #7c5cff;
-      --accent-hover: #977dff;
-      --text: #e8e8f0;
-      --muted: #8a8a99;
+      --bg: #F2DEEA;
+      --paw: #F8F1F1;
+      --panel: #FFFFFF;
+      --text: #423534;
+      --muted: #757575;
+      --line: #D1D1D1;
+      --hover-blue: #54ABD1;
+      --pink: #E08BBF;
+      /* палитра пунктов меню (так как на carrd-странице) */
+      --c-clips: #8388EB;       /* лазурный фиолет */
+      --c-scary: #F57D07;       /* тыквенный оранж */
+      --c-words: #FF6363;       /* алый */
+      --c-anniv: #A464A1;       /* пурпурно-розовый */
+      --c-info:  #368CC2;       /* 蓝 ссылка */
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -21,190 +33,221 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: var(--bg);
+      background-color: var(--bg);
+      /* фирменная плитка кошачьих лапок с carrd-страницы, вид разреженный */
+      background-image: url("data:image/svg+xml;charset=utf8,%3Csvg%20width%3D%22512%22%20height%3D%22512%22%20viewBox%3D%220%200%20512%20512%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%20%3Cstyle%20type%3D%22text%2Fcss%22%3E%20path%20%7B%20fill%3A%20%23F8F1F1%3B%20fill-rule%3A%20evenodd%3B%20clip-rule%3A%20evenodd%3B%20%7D%20%3C%2Fstyle%3E%20%3Cpath%20d%3D%22M352.9%2C258.5c-6.6%2C17.7-21.7%2C28.4-33.6%2C23.9c-11.9-4.5-13.8-22.4-7.2-40.1c6.6-17.7%2C19.3-28.4%2C31.2-23.9%20C355.2%2C222.9%2C359.5%2C240.8%2C352.9%2C258.5z%20M280.1%2C231.8c-13.3-3.4-17.5-22.2-12.5-41.8s17.6-32.8%2C30.9-29.4%20c13.3%2C3.4%2C19.9%2C22.2%2C14.8%2C41.8C308.2%2C222.1%2C293.3%2C235.2%2C280.1%2C231.8z%20M261.6%2C254.6c11.8%2C4.4%2C26.9%2C11.8%2C48%2C44.1%20c21.2%2C32.3-0.7%2C50.2-7.4%2C51.9s-14%2C3.2-30.9-6.4c-7.6-4.3-12.4-4.9-15.4-5.4c-3%2C0.5-7.8%2C1.1-15.4%2C5.4c-16.9%2C9.5-24.2%2C8.1-30.9%2C6.4%20s-28.5-19.7-7.4-51.9s36.3-39.7%2C48-44.1C251.4%2C254.3%2C260.6%2C254.3%2C261.6%2C254.6z%20M231.9%2C231.8c-13.3%2C3.4-28.1-9.7-33.2-29.4%20c-5.1-19.7%2C1.5-38.4%2C14.8-41.8c13.3-3.4%2C25.8%2C9.7%2C30.9%2C29.4C249.5%2C209.7%2C245.2%2C228.4%2C231.9%2C231.8z%20M192.7%2C282.4%20c-11.9%2C4.5-26.9-6.2-33.6-23.9c-6.6-17.7-2.4-35.6%2C9.5-40.1c11.9-4.5%2C24.6%2C6.2%2C31.2%2C23.9C206.6%2C260%2C204.6%2C277.9%2C192.7%2C282.4z%22%2F%3E%20%3Cpath%20d%3D%22M96.9%2C2.5c-6.6%2C17.7-21.7%2C28.4-33.6%2C23.9C51.4%2C21.9%2C49.4%2C4%2C56.1-13.7c6.6-17.7%2C19.3-28.4%2C31.2-23.9%20C99.2-33.1%2C103.5-15.2%2C96.9%2C2.5z%20M24.1-24.2C10.8-27.6%2C6.5-46.3%2C11.6-66s17.6-32.8%2C30.9-29.4C55.8-92%2C62.4-73.2%2C57.3-53.6%20C52.2-33.9%2C37.3-20.8%2C24.1-24.2z%20M5.6-1.4c11.8%2C4.4%2C26.9%2C11.8%2C48%2C44.1S53%2C92.9%2C46.3%2C94.7s-14%2C3.2-30.9-6.4C7.8%2C84%2C3%2C83.4%2C0%2C82.9%20c-3%2C0.5-7.8%2C1.1-15.4%2C5.4c-16.9%2C9.5-24.2%2C8.1-30.9%2C6.4S-74.8%2C75-53.7%2C42.7S-17.4%2C3-5.6-1.4C-4.6-1.7%2C4.6-1.7%2C5.6-1.4z%20M-24.1-24.2%20c-13.3%2C3.4-28.1-9.7-33.2-29.4c-5.1-19.7%2C1.5-38.4%2C14.8-41.8c13.3-3.4%2C25.8%2C9.7%2C30.9%2C29.4S-10.8-27.6-24.1-24.2z%20M-63.3%2C26.4%20c-11.9%2C4.5-26.9-6.2-33.6-23.9c-6.6-17.7-2.4-35.6%2C9.5-40.1c11.9-4.5%2C24.6%2C6.2%2C31.2%2C23.9C206.6%2C260%2C204.6%2C277.9%2C192.7%2C282.4z%22%2F%3E%3C%2Fsvg%3E");
+      background-size: 260px;
       color: var(--text);
-      font-family: "Segoe UI", system-ui, sans-serif;
-      padding: 2rem;
+      font-family: "Montserrat", sans-serif;
+      padding: 2rem 1rem;
     }
 
-    /* фоновое свечение */
-    body::before {
-      content: "";
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      width: 600px;
-      height: 600px;
-      transform: translate(-50%, -60%);
-      background: radial-gradient(circle, rgba(124, 92, 255, 0.12) 0%, transparent 70%);
-      pointer-events: none;
+    .inner {
+      background: var(--panel);
+      border-radius: 0.5rem;
+      box-shadow: 0 18px 50px rgba(66, 53, 52, 0.12);
+      max-width: 42rem;
+      width: 100%;
+      padding: 2.875rem 2.25rem;
+      text-align: center;
+      position: relative;
+      z-index: 1;
     }
 
     h1 {
-      font-size: clamp(2.5rem, 8vw, 4.5rem);
+      font-size: clamp(2.2rem, 7vw, 3.6rem);
       font-weight: 800;
       letter-spacing: 0.02em;
-      background: linear-gradient(135deg, var(--text) 40%, var(--accent));
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: var(--text);
     }
 
     .subtitle {
-      margin-top: 0.75rem;
-      color: var(--muted);
+      margin-top: 0.6rem;
+      color: var(--pink);
+      font-weight: 300;
       font-size: 1.05rem;
-      text-align: center;
+      font-style: italic;
     }
 
-    /* --- меню 2026: при наведении раскрываются две кнопки --- */
-    .menu-2026 {
-      margin-top: 2.5rem;
+    /* ---------- ряд из двух групповых кнопок ---------- */
+    .groups {
+      margin-top: 2.2rem;
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.7rem;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 1rem;
+      flex-wrap: wrap;
     }
 
-    .menu-2026 .submenu {
+    .group { position: relative; }
+
+    /* кнопки в стиле carrd: капсулы, тонкая рамка, uppercase, hover → голубой */
+    .gbtn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.72rem 1.5rem;
+      font-family: "Montserrat", sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text);
+      background: #fff;
+      border: solid 1px var(--line);
+      border-radius: 0.375rem;
+      text-decoration: none;
+      cursor: pointer;
+      transition: border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .gbtn::after { content: "▾"; font-size: 0.75em; margin-left: 0.1em; }
+    .gbtn:hover { border-color: var(--hover-blue); color: var(--hover-blue); }
+    .group:hover .gbtn, .group:focus-within .gbtn { border-color: var(--hover-blue); color: var(--hover-blue); }
+    .group:hover .gbtn::after, .group:focus-within .gbtn::after { content: "▴"; }
+
+    ul.submenu {
+      list-style: none;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 0.7rem;
+      gap: 0.4rem;
+      position: absolute;
+      top: calc(100% + 0.5rem);
+      left: 50%;
+      transform: translateX(-50%) translateY(-6px);
+      z-index: 10;
+      min-width: 100%;
+      width: max-content;
+      max-width: 16rem;
       opacity: 0;
-      transform: translateY(-8px);
       pointer-events: none;
-      transition: opacity 0.25s ease, transform 0.25s ease;
+      transition: opacity 0.22s ease, transform 0.22s ease;
     }
 
-    .menu-2026:hover .submenu,
-    .menu-2026:focus-within .submenu {
+    .group:hover ul.submenu, .group:focus-within ul.submenu {
       opacity: 1;
-      transform: translateY(0);
+      transform: translateX(-50%) translateY(0);
       pointer-events: auto;
     }
 
-    .menu-2026:hover .toggle-btn,
-    .menu-2026:focus-within .toggle-btn {
-      background: var(--accent-hover);
-    }
-
-    .menu-2026 .toggle-btn::after {
-      content: "▾";
-      font-size: 0.8em;
-      margin-left: 0.15em;
-    }
-
-    .menu-2026:hover .toggle-btn::after {
-      content: "▴";
-    }
-
-    .tile-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.6rem;
-      padding: 0.9rem 2.2rem;
-      font-size: 1.15rem;
-      font-weight: 600;
-      color: #fff;
+    .submenu a {
+      display: block;
+      padding: 0.62rem 1rem;
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
       text-decoration: none;
-      background: var(--accent);
-      border-radius: 999px;
-      transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
-      box-shadow: 0 4px 24px rgba(124, 92, 255, 0.35);
+      color: var(--text);
+      background: #fff;
+      border: solid 1px var(--line);
+      border-radius: 0.375rem;
+      white-space: nowrap;
+      transition: border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
     }
 
-    .tile-btn:hover {
-      background: var(--accent-hover);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 28px rgba(124, 92, 255, 0.45);
+    /* цветовой отклик каждого пункта */
+    .submenu a.i-clips:hover    { border-color: var(--c-clips);  color: var(--c-clips); }
+    .submenu a.i-scary:hover    { border-color: var(--c-scary);  color: var(--c-scary); }
+    .submenu a.i-words:hover    { border-color: var(--c-words);  color: var(--c-words); }
+    .submenu a.i-anniv:hover    { border-color: var(--c-anniv);  color: var(--c-anniv); }
+    .submenu a.i-info:hover     { border-color: var(--c-info);   color: var(--c-info); }
+    .submenu a.i-twitch:hover   { border-color: var(--hover-blue); color: var(--hover-blue); }
+
+    /* динамическая подпись статуса стрима */
+    .twitch-state {
+      display: block;
+      margin-top: 0.25rem;
+      text-transform: none;
+      letter-spacing: 0;
+      font-size: 0.7rem;
+      font-weight: 400;
+      color: var(--muted);
     }
 
-    .tile-btn svg {
-      width: 1.2em;
-      height: 1.2em;
-      fill: currentColor;
-    }
-
-    /* хэллоуин — свой, тыквенный акцент */
-    .tile-btn.halloween {
-      background: #e8721a;
-      box-shadow: 0 4px 24px rgba(232, 114, 26, 0.35);
-    }
-
-    .tile-btn.halloween:hover {
-      background: #ff8c2e;
-      box-shadow: 0 6px 28px rgba(232, 114, 26, 0.45);
-    }
-
-    /* страшные истории — багровый акцент */
-    .tile-btn.stories {
-      background: #8a1f2d;
-      box-shadow: 0 4px 24px rgba(138, 31, 45, 0.4);
-    }
-
-    .tile-btn.stories:hover {
-      background: #b23043;
-      box-shadow: 0 6px 28px rgba(138, 31, 45, 0.5);
-    }
-
-    /* годовщина — аметистовый с золотым */
-    .tile-btn.anniversary {
-      background: #6d55b8;
-      box-shadow: 0 4px 24px rgba(109, 85, 184, 0.4);
-    }
-
-    .tile-btn.anniversary:hover {
-      background: #8a72d4;
-      box-shadow: 0 6px 28px rgba(109, 85, 184, 0.5);
-    }
+    .twitch-state .dot { font-size: 0.65rem; }
 
     footer {
-      position: absolute;
-      bottom: 1.5rem;
+      margin-top: 2rem;
       color: var(--muted);
-      font-size: 0.85rem;
+      font-size: 0.8rem;
+      font-weight: 300;
+      position: relative;
+      z-index: 1;
+      text-align: center;
     }
   </style>
 </head>
 <body>
-  <h1>kuromursk</h1>
-  <p class="subtitle">Сайт-заглушка — скоро здесь появится что-то интересное</p>
+  <div class="inner">
+    <h1>kuromursk</h1>
+    <p class="subtitle">Сборник всего, что происходит в КуроМурске</p>
 
-  <div class="menu-2026">
-    <button class="tile-btn toggle-btn" type="button" aria-haspopup="true" aria-expanded="false">2026</button>
+    <div class="groups">
+      <!-- группа 1: 2026 — материалы недавних событий -->
+      <div class="group">
+        <button class="gbtn" type="button" aria-haspopup="true" aria-expanded="false">2026</button>
+        <ul class="submenu">
+          <li><a class="i-clips" href="/clips/">Клипы</a></li>
+          <li><a class="i-scary" href="/halloween/">Ужастик от Рандомявзеров</a></li>
+          <li><a class="i-words" href="/halloweenwords/">Страшные истории</a></li>
+          <li><a class="i-anniv" href="/anniversary/">Поздравления на годовщину</a></li>
+        </ul>
+      </div>
 
-    <div class="submenu">
-      <a class="tile-btn" href="/clips/">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
-        </svg>
-        Клипы
-      </a>
-
-      <a class="tile-btn halloween" href="/halloween/">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 2c.5 0 .9.3 1 .8l.6 2.5c2.9.9 5.4 3.1 5.4 5.9 0 .5 0 1-.2 1.5 1.9.5 3.2 1.6 3.2 2.7 0 .6-.5 1.1-1.2 1.4.5.5.8 1 .8 1.5 0 1.4-2.2 2.7-4.8 2.7-1.2 0-2.4-.3-3.3-.7-.4.2-1 .3-1.5.3s-1.1-.1-1.5-.3c-.9.4-2.1.7-3.3.7-2.6 0-4.8-1.3-4.8-2.7 0-.5.3-1 .8-1.5-.7-.3-1.2-.8-1.2-1.4 0-1.1 1.3-2.2 3.2-2.7-.2-.5-.2-1-.2-1.5 0-2.8 2.5-5 5.4-5.9L11 2.8c.1-.5.5-.8 1-.8zm0 9.5c-3.3 0-6 1.9-6 4.2 0 1.9 1.4 3.5 3.4 4-.9-.9-1.4-2-1.4-3.2 0-2.5 2.2-4.5 4-5zm0 0c1.8.5 4 2.5 4 5 0 1.2-.5 2.3-1.4 3.2 2-.5 3.4-2.1 3.4-4 0-2.3-2.7-4.2-6-4.2zM4.5 17.5c1 1.2 2.9 2 5 2h5c2.1 0 4-.8 5-2-1.3-.4-3-.7-5-.7h-5c-2 0-3.7.3-5 .7z"/>
-        </svg>
-        Ужастик от Рандомявзеров
-      </a>
-
-      <a class="tile-btn stories" href="/halloweenwords/">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M19 2H6c-1.7 0-3 1.3-3 3v13c0 1.7 1.3 3 3 3h13c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h10v14H6c0-1.1-.9-2-2-2V6c1.1 0 2-.9 2-2zm12 14h-1V4h1v14z"/>
-        </svg>
-        Страшные истории
-      </a>
-
-      <a class="tile-btn anniversary" href="/anniversary/">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2zm-2 9h-3l2 2-2 2h3v2l-4-3 4-3v0zm-8-1H6v1h4V10zm6-3H6v1h10V7z"/>
-        </svg>
-        Поздравления на годовщину
-      </a>
+      <!-- группа 2: О КуроМэре -->
+      <div class="group">
+        <button class="gbtn" type="button" aria-haspopup="true" aria-expanded="false">О КуроМэре</button>
+        <ul class="submenu">
+          <li><a class="i-info" href="https://kuromurinfo.carrd.co/" target="_blank" rel="noopener">О КуроМур</a></li>
+          <li>
+            <a class="i-twitch" href="https://www.twitch.tv/kuromur" target="_blank" rel="noopener">
+              Стримы КуроМур
+              <span class="twitch-state" data-channel="kuromur"><span class="dot">⚪</span><span class="lbl">проверяем статус…</span></span>
+            </a>
+          </li>
+        </ul>
+      </div>
     </div>
   </div>
 
   <footer>kuromursk</footer>
+
+  <script>
+    // Динамический статус twitch-канала через DecAPI (CORS разрешён, ключи не нужны)
+    (function () {
+      const el = document.querySelector(".twitch-state");
+      if (!el) return;
+      const ch = el.dataset.channel || "kuromur";
+      const dot = el.querySelector(".dot");
+      const lbl = el.querySelector(".lbl");
+      const setText = (t) => { if (lbl) lbl.textContent = t; };
+
+      fetch("https://decapi.me/twitch/uptime/" + ch)
+        .then(r => r.text())
+        .then(txt => {
+          if (/is offline/i.test(txt)) {
+            dot.textContent = "⚪";
+            setText("офлайн");
+          } else {
+            dot.textContent = "🟢";
+            return fetch("https://decapi.me/twitch/viewercount/" + ch)
+              .then(r => r.text())
+              .then(v => {
+                const n = parseInt(v, 10);
+                if (isNaN(n)) return setText("онлайн");
+                const forms = n % 10 === 1 && n % 100 !== 11 ? "зритель"
+                  : [2,3,4].includes(n % 10) && ![12,13,14].includes(n % 100) ? "зрителя"
+                  : "зрителей";
+                setText("онлайн · " + n.toLocaleString("ru-RU") + " " + forms);
+              });
+          }
+        })
+        .catch(() => {
+          dot.textContent = "⚪";
+          setText("статус недоступен");
+        });
+    })();
+  </script>
 </body>
 </html>
