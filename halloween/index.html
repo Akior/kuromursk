@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>kuromur — Хоррор стрим</title>
+<style>
+*{box-sizing:border-box}
+:root{--bg:#0e0e10;--panel:#1f1f23;--panel2:#18181b;--border:#2f2f35;--purple:#9146ff;--text:#efeff1;--muted:#adadb8;--red:#eb0400;--orange:#ff7a00}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Helvetica,Arial,sans-serif;cursor:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32'><text y='25' font-size='24'>🎃</text></svg>") 16 16, auto}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:4;background:radial-gradient(ellipse at 50% 120%,rgba(255,122,0,.10),transparent 55%),radial-gradient(ellipse at 50% -20%,rgba(145,70,255,.12),transparent 55%);animation:vinpulse 6s ease-in-out infinite}
+@keyframes vinpulse{0%,100%{opacity:.7}50%{opacity:1}}
+a,button,.dot,.copy,.story-arrow{cursor:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32'><text y='25' font-size='24'>👆</text></svg>") 16 16, pointer}
+.trail{position:fixed;z-index:60;pointer-events:none;animation:trailfloat 1s ease-out forwards}
+@keyframes trailfloat{0%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(0)}100%{opacity:0;transform:translate(-50%,-160%) scale(.3) rotate(40deg)}}
+.ghost{position:fixed;z-index:2;pointer-events:none;animation:ghostfloat 7s ease-in-out forwards;filter:drop-shadow(0 0 12px rgba(180,140,255,.6))}
+@keyframes ghostfloat{0%{opacity:0;transform:translateY(20px) scale(.8)}15%{opacity:.55}80%{opacity:.4}100%{opacity:0;transform:translateY(-60px) scale(1.1)}}
+.batfly{position:fixed;top:8%;left:-15%;z-index:3;pointer-events:none;font-size:26px;animation:batfly 9s linear forwards;filter:drop-shadow(0 0 8px rgba(0,0,0,.8))}
+@keyframes batfly{to{transform:translateX(130vw) translateY(6vh)}}
+.live-badge{animation:flick 4s infinite}
+@keyframes flick{0%,100%{opacity:1}92%{opacity:1}93%{opacity:.4}94%{opacity:1}96%{opacity:.6}97%{opacity:1}}
+.logo-mark{animation:pumpglow 3s ease-in-out infinite}
+@keyframes pumpglow{0%,100%{box-shadow:0 0 4px rgba(255,122,0,.4)}50%{box-shadow:0 0 16px rgba(255,122,0,.9)}}
+#musicbtn.on{background:var(--purple)}
+.topnav{height:50px;background:var(--panel2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;padding:0 14px;position:sticky;top:0;z-index:20}
+.logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:18px}
+.logo-mark{width:28px;height:28px;background:var(--purple);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.nav-links{display:flex;gap:14px;font-size:14px}
+.search{flex:1;display:flex;justify-content:center}
+.search input{width:min(380px,40vw);background:#2f2f35;border:1px solid #53535f;color:var(--text);border-radius:6px;padding:7px 10px;font-size:13px}
+.nav-right{display:flex;gap:8px}
+.btn-login{background:#2f2f35;border:0;color:#fff;padding:7px 12px;border-radius:5px;font-size:13px;cursor:pointer}
+.btn-sign{background:var(--purple);border:0;color:#fff;padding:7px 12px;border-radius:5px;font-size:13px;cursor:pointer}
+.stream-layout{display:grid;grid-template-columns:minmax(0,1fr) clamp(300px,24vw,380px);height:calc(100vh - 50px)}
+@media(max-width:950px){.stream-layout{grid-template-columns:1fr;height:auto}}
+.main-col{display:flex;flex-direction:column;min-width:0;min-height:0}
+.video-wrap{background:#000;position:relative;overflow:hidden;border-bottom:1px solid var(--border);flex:1;min-height:0;display:flex;flex-direction:column}
+#streamimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.8;filter:saturate(1.1);z-index:0;transition:opacity .6s}
+.video-wrap::before{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;background:rgba(0,0,0,.4)}
+.video-story{text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 10px rgba(0,0,0,.75)}
+.video-story{position:relative;z-index:2;max-width:860px;width:100%;margin:0 auto;padding:clamp(8px,2vh,20px) clamp(50px,5vw,58px) clamp(4px,1vh,10px);flex:1;min-height:0;overflow:hidden}
+#clock{color:#fff;font-size:12px;background:rgba(0,0,0,.6);padding:4px 9px;border-radius:5px}
+.live-badge{position:absolute;top:12px;left:12px;background:var(--red);font-size:12px;font-weight:700;padding:3px 8px;border-radius:5px;z-index:3}
+.viewers-badge{position:absolute;top:12px;left:80px;background:rgba(0,0,0,.7);font-size:12px;padding:3px 8px;border-radius:5px;z-index:3}
+.story-arrow{position:absolute;top:45%;z-index:3;background:rgba(20,20,25,.8);border:1px solid var(--border);color:#fff;font-size:20px;width:36px;height:56px;border-radius:8px;cursor:pointer}
+#prev{left:8px}#next{right:8px}
+/* Финал: фон затемняется до 90%, затем окно-подтверждение */
+#dimmer{position:absolute;inset:0;z-index:4;pointer-events:none;background:rgba(5,0,15,0);transition:background 5s ease}
+body.final-dim #dimmer{background:rgba(5,0,15,.6)}
+#mimicBtn{position:absolute;left:50%;bottom:14px;transform:translate(-50%,0);z-index:5;display:none;opacity:0;transition:opacity .8s;background:rgba(10,2,20,.95);border:2px solid #ff4d6d;border-radius:14px;padding:26px 46px 30px;color:#fff;font-size:22px;font-weight:800;text-align:center;text-shadow:0 0 8px rgba(255,77,109,.8);box-shadow:0 0 40px rgba(255,77,109,.6),0 0 90px rgba(145,70,255,.45);text-decoration:none;pointer-events:none}
+body.final-show #mimicBtn{display:block;opacity:1;animation:mimicpulse 1.6s ease-in-out infinite}
+@keyframes mimicpulse{0%,100%{transform:translate(-50%,0) scale(1)}50%{transform:translate(-50%,0) scale(1.04)}}
+/* курсор = большая кнопка «Да», клик мыши/клавиатура открывают index2 */
+body.final-show,body.final-show a,body.final-show button,body.final-show .dot,body.final-show input{cursor:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='84' height='44'><rect x='2' y='2' width='80' height='40' rx='10' fill='%239146ff' stroke='%23ff4d6d' stroke-width='3'/><text x='42' y='29' text-anchor='middle' font-family='Arial' font-weight='bold' font-size='22' fill='white'>Да</text></svg>") 42 22, auto}
+#bar-wrap{height:3px;background:#2f2f35;border-radius:2px;margin:6px 0}#bar{height:100%;width:0;background:var(--purple)}
+.dots{display:flex;gap:5px;justify-content:center;padding:6px 0 2px;flex-wrap:wrap}
+.dot{width:18px;height:5px;border-radius:3px;background:#3d3d45;border:0;cursor:pointer}
+.dot.active{background:var(--purple)}
+.stream-info{display:flex;gap:12px;padding:14px 18px;background:var(--panel);border-bottom:1px solid var(--border)}
+.info-main{flex:1}
+.streamer-row{display:flex;align-items:center;gap:8px;font-weight:700}
+.verified{background:var(--purple);color:#fff;font-size:11px;border-radius:50%;width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center}
+.stream-title{font-size:15px;margin:4px 0}
+.tags{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.tag{background:#2f2f35;color:var(--muted);font-size:12px;padding:3px 9px;border-radius:999px}
+.info-actions{display:flex;gap:8px}
+.btn-follow{background:var(--purple);color:#fff;border:0;padding:8px 14px;border-radius:5px;font-weight:700;cursor:pointer}
+.btn-sub{background:#2f2f35;color:#fff;border:0;padding:8px 12px;border-radius:5px;cursor:pointer}
+.page{padding:clamp(4px,1vh,12px) clamp(8px,1.5vw,16px);min-height:0}
+.text{font-size:clamp(13.5px,calc(1.75vh + 2px),16px);line-height:1.5;color:#d8d8de}
+.text p{margin:0 0 clamp(2px,.7vh,6px)}
+.chatline{background:#101014;border-left:3px solid var(--purple);padding:clamp(3px,.7vh,5px) 9px;margin:clamp(2px,.6vh,5px) 0;border-radius:0 6px 6px 0;font-family:Consolas,monospace;font-size:clamp(13px,calc(1.65vh + 2px),15px)}
+.chatline.mimic{border-left-color:#ff4d6d}
+.chatline.kuro{border-left-color:#ffd166}
+.chatline.sysline{border-left-color:#555;color:var(--muted);font-style:italic}
+.nick-mod{color:#00f593;font-weight:700}.nick-vip{color:#ff71ce;font-weight:700}.nick-user{color:#5aa9ff}.nick-mim{color:#ff8fa3;font-weight:700}.nick-kuro{color:#ffd166;font-weight:700}
+.chat-col{background:var(--panel2);border-left:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:50px;height:calc(100vh - 50px);min-height:0}
+.chat-head{padding:10px 12px;border-bottom:1px solid var(--border);font-size:12px;font-weight:700;text-transform:uppercase;display:flex;justify-content:space-between}
+#chatbox{flex:1;min-height:0;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:4px;font-size:clamp(13.5px,calc(1.7vh + 2px),15.5px)}
+.tmsg{line-height:1.45}.tmsg .tbadge{font-size:10px;padding:1px 5px;border-radius:4px;margin-right:5px;font-weight:700}
+.b-mod{background:#00f593;color:#000}.b-vip{background:#e919e9;color:#fff}.b-sub{background:#9146ff;color:#fff}.b-mim{background:#eb0400;color:#fff}
+.tmsg.out{opacity:.45}.tuser{font-weight:700}
+.chat-input{padding:10px 12px;border-top:1px solid var(--border)}
+.chat-input input{width:100%;background:#2f2f35;border:1px solid #53535f;border-radius:6px;color:#fff;padding:9px 10px;font-size:13px}
+.roster{max-height:14vh;min-height:0;overflow-y:auto;padding:10px 12px;border-top:1px solid var(--border);font-size:clamp(10.5px,1.6vh,12px);color:var(--muted)}
+footer{padding:18px;text-align:center;color:var(--muted);font-size:12px}
+a{color:#bf94ff}
+#magic{position:fixed;inset:0;pointer-events:none;z-index:5;opacity:.4}
+</style>
+</head>
+<body>
+<canvas id="magic"></canvas>
+<nav class="topnav">
+<div class="logo"><div class="logo-mark">◭</div> twitch <span style="color:var(--muted);font-size:13px">• Halloween</span></div>
+<div class="nav-links"><span>Following</span><span>Browse</span><span>Esports</span></div>
+<div class="search"><input placeholder="Search"></div>
+<div class="nav-right"><button class="btn-login" id="musicbtn" title="Halloween lo-fi">🎃 Выключить звук</button><button class="btn-login">Log In</button><button class="btn-sign">Sign Up</button></div>
+</nav>
+<div class="stream-layout">
+<div class="main-col">
+<div class="video-wrap" id="live">
+<img id="streamimg" alt="">
+<div class="live-badge">LIVE</div><div class="viewers-badge">👁 <span id="online-top">22</span> viewers</div>
+<div id="dimmer"></div>
+<div id="mimicBtn">Вы уверены что это конец ?</div>
+<button class="story-arrow" id="prev">‹</button>
+<button class="story-arrow" id="next">›</button>
+<div class="video-story">
+<div id="bar-wrap"><div id="bar"></div></div>
+<div class="page"><div class="text" id="ctext"></div>
+</div>
+<div class="dots" id="dots"></div>
+</div>
+</div>
+<div class="stream-info">
+<img src="https://static-cdn.jtvnw.net/jtv_user_pictures/cbd05b02-e19c-4f97-b62e-7ebacc95b482-profile_image-70x70.png" alt="kuromur" style="width:64px;height:64px;border-radius:50%;border:2px solid var(--purple);object-fit:cover">
+<div class="info-main">
+<div class="streamer-row">KuroMur <span class="verified">✓</span> <span style="font-weight:400;color:var(--muted);font-size:13px">2.3K followers</span></div>
+<div class="stream-title" id="stream-title">Хоррор стрим | сюрприз-игра</div>
+<div class="tags"><span class="tag">Russian</span><span class="tag">Halloween</span><span class="tag">Horror</span></div>
+</div>
+<div class="info-actions"><button class="btn-follow">♥ Follow</button><button class="btn-sub">★ Subscribe</button></div>
+</div>
+</div>
+<div class="chat-col">
+<div class="chat-head"><span>Stream Chat</span><span id="chatcount">22 watching</span></div>
+<div id="chatbox"></div>
+<div class="roster" id="roster"></div>
+<div class="chat-input"><input id="fakeinput" placeholder="Send a message"></div>
+</div>
+</div>
+<footer>fan storybook • <a href="https://www.twitch.tv/kuromur" target="_blank">twitch.tv/kuromur</a></footer>
+<script>
+"use strict";
+const mods=['murov_mur_murovich','kuro_jiexa','randomyawzer'];
+const vips=['ulianaja','artemla_','black_cat676584','vyachesleiv','vangelion_bro','dilzayshka','stels_neo','felix__elf','nameless_fairy'];
+const users=['al_murr','andykylak','Sadfaint','Shodgearo','204_4','darrwin3','g1sta_doll','l1wka','fordmits','Fragile_For_You'];
+const all=[...mods,...vips,...users];
+const order=['al_murr','l1wka','Sadfaint','g1sta_doll','Shodgearo','204_4','darrwin3','andykylak','fordmits','Fragile_For_You','artemla_','black_cat676584','vyachesleiv','vangelion_bro','dilzayshka','stels_neo','felix__elf','nameless_fairy','ulianaja','randomyawzer','kuro_jiexa','murov_mur_murovich'];
+const userColors={};all.forEach((n,i)=>{const c=['#ff6961','#5aa9ff','#00f593','#ff71ce','#ffd166','#bf94ff','#ff9c41','#7ddf64'];userColors[n]=c[i%c.length]});
+function badge(n){if(n==='Kuromur')return '<span class="tbadge b-mim">MIMIC</span>';if(mods.includes(n))return '<span class="tbadge b-mod">MOD</span>';if(vips.includes(n))return '<span class="tbadge b-vip">VIP</span>';return '<span class="tbadge b-sub">SUB</span>'}
+const chapters=[
+{time:'15:00',title:'Пролог',online:22,text:`<p>КуроМур запускает стрим как обычно. Рассказывает, что успела перекусить: картошку с мясом и солёными огурчиками, а после выпила какао с маршмеллоу. Болтает, смеётся. Предлагает поиграть в хоррор игру, которую она долго готовила как сюрприз.</p><div class="chatline"><span class="nick-mod">murov_mur_murovich:</span> ЗАЩИЩАЮ ЧАТ. Мяу-патруль на месте</div><div class="chatline"><span class="nick-vip">ulianaja:</span> Здравствуйте! Куро, ты слишком милая для хоррора.</div><div class="chatline"><span class="nick-vip">nameless_fairy:</span> хоррор? звучит заманчиво</div><div class="chatline"><span class="nick-user">al_murr:</span> Сочник лишь не свежий будет как пустыня. Китайская мудрость</div><div class="chatline"><span class="nick-mod">kuro_jiexa:</span> Звук норм, кошка супер милашка, погнали</div><div class="chatline"><span class="nick-mod">randomyawzer:</span> Здравствуйте ✌️</div><div class="chatline"><span class="nick-vip">artemla_:</span> Смотрю Куромур с кровати, с Акулкой</div><p>Чат в сборе — уже 22 на месте. Куро тянется к чашке и замечает сообщение от ника Kuromur, которого она не писала.</p><div class="chatline mimic"><span class="nick-mim">Kuromur:</span> al_murr, как я тебя ждала! Тыкву за мной видишь? Ответь!</div><p>КуроМур смотрит на сообщение, возможно баг думает она. <i>«Странно, я же ничего не отправляла»</i></p>`},
+{time:'15:05',title:'Первые ответы',online:19,text:`<div class="chatline"><span class="nick-user">al_murr:</span> @kuromur вижу, ты очень постаралась для нас.</div><div class="chatline sysline">[Twitch]: Пользователь al_murr не найден.</div><p>В это время КуроМур запускает игру, но на экране появляется ошибка. Ищет крестик, чтобы выйти и перезапустить игру, а его нет.</p><div class="chatline mimic"><span class="nick-mim">Kuromur:</span> l1wka, как думаешь, что это за ошибка?</div><div class="chatline"><span class="nick-user">l1wka:</span> Kuromur, не знаю, впервые вижу.</div><div class="chatline sysline">[Twitch]: Пользователь l1wka не найден.</div><p>Куромур нашла способ перезапустить игру, но выдало ту же ошибку. <i>«Что же делать?»</i> думает она</p><div class="chatline mimic"><span class="nick-mim">Kuromur:</span> Sadfaint, может ты поможешь?</div><div class="chatline"><span class="nick-user">Sadfaint:</span> Kuromur, я раньше не встречался с такой ошибкой. Может стоит перезапустить комп?</div><div class="chatline sysline">[Twitch]: Пользователь Sadfaint не найден.</div><p>КуроМур обращает внимание на чат. Наводит на ник чаттерса — профиль не открывается. Сообщение об удалении так и висит. <i>«Что? Уже третий»,</i> — думает она.</p>`},
+{time:'15:25',title:'Подозрение',online:16,text:`<p>КуроМур открывает модерку, жмёт удалить сообщение рядом со своим ником — ничего не получается. Пробует перезапустить стрим, но кнопка не работает.</p><div class="chatline mimic"><span class="nick-mim">Kuromur:</span> g1sta_doll, пора бы уже сделать кусь?</div><div class="chatline"><span class="nick-user">g1sta_doll:</span> Kuromur, ого, читаешь мои мысли. !кусь Kuromur</div><div class="chatline sysline">[Twitch]: Пользователь g1sta_doll не найден.</div><div class="chatline mimic"><span class="nick-mim">Kuromur:</span> Shodgearo, ты не рассказал, что сегодня кушал</div><div class="chatline"><span class="nick-user">Shodgearo:</span> Уведомляю: захват кексиков произошёл успешно.</div><div class="chatline sysline">[Twitch]: Пользователь Shodgearo не найден.</div><p>Начинает подозревать, что всё очень плохо. Смотрит список пользователей — их больше нет. <i>«Все ответили — все пропали».</i></p><div class="chatline mimic"><span class="nick-mim">Kuromur:</span> 204_4, ты какие суши любишь? Признайся!</div><div class="chatline"><span class="nick-user">204_4:</span> Kuromur, суши обожаю, а лучше всего заходят запеченные</div><div class="chatline sysline">[Twitch]: Пользователь 204_4 не найден.</div>`},
+{time:'15:45',title:'Тревога',online:13,text:`<p>Куромур открывает вторую вкладку твича в браузере — там то же самое. Руки холодеют.</p><div class="chatline mimic"><span class="nick-mim">Kuromur:</span> darrwin3, игру никак не запустить. Что ещё попробовать?</div><div class="chatline"><span class="nick-user">darrwin3:</span> Kuromur, может стоит посмотреть диспетчер задач</div><div class="chatline sysline">[Twitch]: Пользователь darrwin3 не найден.</div><p>Записывает ники в блокнот. <i>«Больше не дам отвечать».</i> Пробует ограничить всем чат, но ни медленный режим ни другие функции не подключаются.</p><div class="chatline mimic"><span class="nick-mim">Kuromur:</span> andykylak, что делал? рассказывай)</div><div class="chatline"><span class="nick-user">andykylak:</span> Привет Курумурчане и Куромур. Поел сейчас булочек с чаем и так спать хочется</div><div class="chatline sysline">[Twitch]: Пользователь andykylak не найден.</div><div class="chatline mimic"><span class="nick-mim">Kuromur:</span> fordmits, что-то не так, звук пропал? Слышишь меня?</div><div class="chatline"><span class="nick-user">fordmits:</span> Kuromur, слышу только музыку на фоне, у тебя включен микро?</div><div class="chatline sysline">[Twitch]: Пользователь fordmits не найден.</div><p>Проверяет настройки стрима. Жмёт кнопку остановки стрима, но она неактивна. Тревога.</p>`},
+{time:'17:05',title:'Бумага',online:10,text:`<p>КуроМур думает какие варианты у неё остаются. Выключить компьютер? Отключить интернет? А в это время в чате:</p><div class="chatline mimic"><span class="nick-mim">Kuromur:</span> Fragile_For_You, У меня экран моргает. На стриме так же? Видишь какую пишет ошибку?</div><div class="chatline"><span class="nick-user">Fragile_For_You:</span> Kuromur, вижу, там Код 401.</div><div class="chatline sysline">[Twitch]: Пользователь Fragile_For_You не найден.</div><p>Куромур решает написать на бумаге НЕ ОТВЕЧАЙТЕ, включает вебку и показывает лист.</p><div class="chatline mimic"><span class="nick-mim">Kuromur:</span> artemla_, Видишь картинку с вебки, как качество?</div><div class="chatline"><span class="nick-vip">artemla_:</span> Kuromur, вижу лапки Куромурочки!</div><div class="chatline sysline">[Twitch]: Пользователь artemla_ не найден.</div><p><i>«Это баг, просто баг»</i> — думает КуроМур, а её руки холодеют.</p><div class="chatline mimic"><span class="nick-mim">Kuromur:</span> black_cat676584, черный кот, ты тут? Мяукни в чат</div><div class="chatline"><span class="nick-vip">black_cat676584:</span> Тут! Мяу мяу мяу</div><div class="chatline sysline">[Twitch]: Пользователь black_cat676584 не найден.</div><p><i>«Помяукал и пропал».</i> Тишина.</p>`},
+{time:'18:30',title:'Паника',online:7,text:`<p>КуроМур думает — <i>«Надо их остановить. Как?»</i> Нужные кнопки неактивны. Страх охватывает её, но она решает отключить интернет на своём компьютере. Но ничего не меняется! А в чате продолжается:</p><div class="chatline mimic"><span class="nick-mim">Kuromur:</span> vyachesleiv, картинка лагает? Может есть помехи?</div><div class="chatline"><span class="nick-vip">vyachesleiv:</span> Куромурочка приветик. У меня на экране всё ок</div><div class="chatline sysline">[Twitch]: Пользователь vyachesleiv не найден.</div><div class="chatline mimic"><span class="nick-mim">Kuromur:</span> vangelion_bro, в хорроры играл? Посмотришь моё прохождение?</div><div class="chatline"><span class="nick-vip">vangelion_bro:</span> Kuromur, играл, не сложно и иногда даже страшно.</div><div class="chatline sysline">[Twitch]: Пользователь vangelion_bro не найден.</div><p>Ищет в поисковике то, что поможет в этой ситуации, но тщетно. <i>«Всё превращается в ловушку».</i></p><div class="chatline mimic"><span class="nick-mim">Kuromur:</span> dilzayshka, чат обновляется? Видишь сообщения?</div><div class="chatline"><span class="nick-vip">dilzayshka:</span> Kuromur, обновляется, всё хорошо. Скорее бы игра загрузилась</div><div class="chatline sysline">[Twitch]: Пользователь dilzayshka не найден.</div><p><i>«Верните их»</i> — У КуроМур потекли слёзы.</p>`},
+{time:'19:30',title:'Хрип',online:4,text:`<p>КуроМур крутит камеру. <i>«Смотрите на меня, не пишите»</i>. Она ещё надеется, что есть способ всё остановить</p><div class="chatline mimic"><span class="nick-mim">Kuromur:</span> stels_neo, свет в комнате норм? Меня видно?</div><div class="chatline"><span class="nick-vip">stels_neo:</span> Kuromur, ты пока в тени, но контуры вижу.</div><div class="chatline sysline">[Twitch]: Пользователь stels_neo не найден.</div><div class="chatline mimic"><span class="nick-mim">Kuromur:</span> felix__elf, в OBS разбираешься? Может есть какой-то способ починить проблему когда звук не захватывается?</div><div class="chatline"><span class="nick-vip">felix__elf:</span> Kuromur, слышал, что помогает запуск от лица администратора.</div><div class="chatline sysline">[Twitch]: Пользователь felix__elf не найден.</div><p><i>«Всё перепробовала»</i> — думает КуроМур — <i>«ничего не помогает»</i>.</p><div class="chatline mimic"><span class="nick-mim">Kuromur:</span> nameless_fairy, есть идеи, что это за ошибка от игры?</div><div class="chatline"><span class="nick-vip">nameless_fairy:</span> Kuromur, может проблема с кешем? Пробовала почистить?</div><div class="chatline sysline">[Twitch]: Пользователь nameless_fairy не найден.</div>`},
+{time:'20:00',title:'Пирог',online:2,text:`<p>КуроМур рыдает. Выдергивает клавиатуру — чат пишет сам. Пробует выключить компьютер — кнопка выключения серая.</p><div class="chatline mimic"><span class="nick-mim">Kuromur:</span> ulianaja, ты хотела печь пирог с яблоками, поделись рецептом!</div><div class="chatline"><span class="nick-vip">ulianaja:</span> Kuromur, да, сейчас распишу, как раз допекается в духовке.</div><div class="chatline sysline">[Twitch]: Пользователь ulianaja не найден.</div><div class="chatline mimic"><span class="nick-mim">Kuromur:</span> randomyawzer, kuro_helper похоже отвалился, посмотри.</div><div class="chatline"><span class="nick-mod">randomyawzer:</span> Kuromur, да, похоже слетела авторизация, сейчас сделаю.</div><div class="chatline sysline">[Twitch]: Пользователь randomyawzer не найден.</div>`},
+{time:'03:33',title:'Онлайн 0',online:0,text:`<div class="chatline mimic"><span class="nick-mim">Kuromur:</span> kuro_jiexa, задержка стрима большая?</div><div class="chatline"><span class="nick-mod">kuro_jiexa:</span> Kuromur, считаю! Один... Два...</div><div class="chatline sysline">[Twitch]: Пользователь kuro_jiexa не найден.</div><p>КуроМур смотрит в чат, бросает клавиатуру — <i>«Всё. Я ничего не могу»</i>.</p><div class="chatline mimic"><span class="nick-mim">Kuromur:</span> murov_mur_murovich, режим модера работает? Проверишь?</div><div class="chatline"><span class="nick-mod">murov_mur_murovich:</span> Kuromur, сейчас проверю, не дам в беду кошку.</div><div class="chatline sysline">[Twitch]: Пользователь murov_mur_murovich не найден.</div><p>Онлайн 0. Куро одна. Она не знает, что делать … Решает проговорить вслух все 22 ника. Вспышка на экране. КуроМур закрывает от света глаза.</p>`},
+{time:'09:12',title:'Утро',online:22,text:`<p>Утро 31 октября. КуроМур спала лицом на клавиатуре. Видимо сильно переутомилась пока готовилась к праздничному стриму. Пронесло! Это был всего лишь страшный сон с хорошей концовкой. КуроМур запускает стрим чтобы всё это рассказать чату:</p><div class="chatline kuro"><span class="nick-kuro">КуроМур:</span> Мне снилось, что вы все пропали. Было так страшно и одиноко.</div><div class="chatline"><span class="nick-mod">murov_mur_murovich:</span> Курорыцарь на месте! Не дадим мэра в обиду.</div><div class="chatline"><span class="nick-mod">kuro_jiexa:</span> Собрались куромурчане, которые очень-очень-очень-очень-очень любят КуроМур</div><div class="chatline"><span class="nick-mod">randomyawzer:</span> Новая команда успешно установлена — !обнимашки</div><div class="chatline"><span class="nick-vip">ulianaja:</span> Пирог получился отпадный, было бы здорово всех угостить.</div><div class="chatline"><span class="nick-vip">artemla_:</span> Куромур получает награду: Поцелуйчик от Артемлы</div><div class="chatline"><span class="nick-vip">black_cat676584:</span> Слава нашей Куромур-мэр-воин-чемпион-кошечка-кошкодевочка-курорыцарь-куросамурай</div><div class="chatline"><span class="nick-vip">vyachesleiv:</span> Не переживай куромурочка, это всего лишь сон.</div><div class="chatline"><span class="nick-vip">vangelion_bro:</span> Мы всегда с тобой!</div><div class="chatline"><span class="nick-vip">dilzayshka:</span> Хотел мемчик скинуть в тему, но они под фильтром увы, я терплю</div><div class="chatline"><span class="nick-vip">stels_neo:</span> куромур, всё хорошо!</div><div class="chatline"><span class="nick-vip">felix__elf:</span> Я так рад, что недавно стал почетным жителем Куромурска.</div><p>Половина чата уже написало. Остальных ждет дальше, когда же они придут и напишут.</p>`},
+{time:'9:15',title:'Явь',online:22,text:`<p>Куро читает дальше, улыбается</p><div class="chatline"><span class="nick-user">Fragile_For_You:</span> Здравствуйте Kuromur, надеюсь сегодня чувствуете себя отлично!</div><div class="chatline"><span class="nick-user">g1sta_doll:</span> Кусь будет в самый неожиданный момент.</div><div class="chatline"><span class="nick-user">204_4:</span> Знаете как в футболе отмечают победу? подбрасывают тренера, вот мы также будем подбрасывать КуроМур</div><div class="chatline"><span class="nick-user">Sadfaint:</span> Как всегда милая моделька у Куромур.</div><div class="chatline"><span class="nick-user">andykylak:</span> Привет Курумурчане, мы снова тут *вибрирует дальше*</div><div class="chatline"><span class="nick-user">l1wka:</span> Самый тёплый стрим, а пью черный чай с тортиком.</div><div class="chatline"><span class="nick-user">al_murr:</span> КуроМур, высплюсь под твой голос и никуда не денусь.</div><p>КуроМур попрощалась со всеми и приказала ждать 15:00 когда она снова запустит и начнётся грандиозное мероприятие!</p>`}
+];
+/* Единая лента чата: собирается один раз из глав по порядку
+   (приветствия → ловушка → ответ → TWITCH) и только дописывается.
+   Назад не стирается — как настоящий чат. */
+const feed=[];
+(function(){
+const tmp=document.createElement('div');
+chapters.forEach(c=>{
+tmp.innerHTML=c.text;
+tmp.querySelectorAll('.chatline').forEach(cl=>{
+if(cl.classList.contains('sysline')){
+const m=cl.textContent.match(/Пользователь\s+(\S+?)\s+не найден/);
+feed.push(m?{k:'tw',nick:m[1].replace(/[.,!?;:]+$/,'')}:{k:'sys',text:cl.textContent.trim()});
+return;
+}
+const nickEl=cl.querySelector('span'); if(!nickEl) return;
+const nick=nickEl.textContent.replace(/:$/,'');
+const txt=cl.textContent.slice(nickEl.textContent.length).trim();
+if(!all.includes(nick)&&nick!=='Kuromur'&&nick!=='КуроМур') return;
+feed.push({k:'chat',nick,text:txt});
+});
+});
+})();
+const chapterEnd=[];let acc=0;
+(function(){
+const tmp=document.createElement('div');
+chapters.forEach(c=>{
+tmp.innerHTML=c.text;
+acc+=tmp.querySelectorAll('.chatline').length;
+chapterEnd.push(acc);
+});
+})();
+let shown=0;
+function feedNode(m){
+const d=document.createElement('div');d.className='tmsg';
+if(m.k==='tw'){d.innerHTML='<span style="color:#555;font-style:italic">[Twitch]: Пользователь '+m.nick+' не найден.</span>';return d}
+if(m.k==='sys'){d.innerHTML='<span style="color:#adadb8">'+m.text+'</span>';return d}
+if(m.nick==='Kuromur'){d.innerHTML='<span class="tbadge b-mim">MIMIC</span><span class="tuser" style="color:#ff8fa3">Kuromur</span>: <span>'+m.text+'</span>';return d}
+if(m.nick==='КуроМур'){d.innerHTML='<span class="tuser" style="color:#ffd166">КуроМур</span>: <span>'+m.text+'</span>';return d}
+d.innerHTML=badge(m.nick)+'<span class="tuser" style="color:'+userColors[m.nick]+'">'+m.nick+'</span>: <span>'+m.text+'</span>';
+return d;
+}
+function syncChat(i){
+const box=document.getElementById('chatbox');
+const target=chapterEnd[i];
+if(shown>target){
+  [...box.children].forEach(n=>{ if(n.dataset&&n.dataset.f!==undefined&&+n.dataset.f>=target) n.remove(); });
+  shown=target;
+}
+let added=false;
+while(shown<target&&shown<feed.length){const n=feedNode(feed[shown]);n.dataset.f=shown;box.appendChild(n);shown++;added=true}
+if(added)box.scrollTop=box.scrollHeight;
+}
+let idx=0;
+const ctext=document.getElementById('ctext'),onlineTop=document.getElementById('online-top'),bar=document.getElementById('bar'),dots=document.getElementById('dots'),chatbox=document.getElementById('chatbox'),roster=document.getElementById('roster'),chatcount=document.getElementById('chatcount'),stitle=document.getElementById('stream-title');
+chapters.forEach((_,i)=>{const d=document.createElement('button');d.className='dot'+(i===0?' active':'');d.title=chapters[i].time;d.onclick=()=>go(i);dots.appendChild(d)});
+let finalTimer=null;
+function armFinale(){
+clearTimeout(finalTimer); finalTimer=null;
+document.body.classList.remove('final-dim');
+document.body.classList.remove('final-show');
+if(idx===chapters.length-1){
+finalTimer=setTimeout(()=>{
+document.body.classList.add('final-dim');
+setTimeout(()=>{ if(idx===chapters.length-1) document.body.classList.add('final-show'); },5000);
+},6000);
+}
+}
+function go(i){
+idx=Math.max(0,Math.min(chapters.length-1,i));
+const c=chapters[idx];
+ctext.innerHTML=c.text;
+onlineTop.textContent=c.online;
+const si=document.getElementById('streamimg');
+const src='kuro.'+(idx+1)+'.png';
+if(si.getAttribute('src')!==src){ si.style.display=''; si.onerror=()=>{si.style.display='none'}; si.setAttribute('src',src); }
+stitle.textContent='Хоррор стрим: '+c.title+' | '+c.online+' viewers';
+bar.style.width=((idx+1)/chapters.length*100)+'%';
+[...dots.children].forEach((d,j)=>d.classList.toggle('active',j===idx));
+document.getElementById('prev').disabled=idx==0;
+document.getElementById('next').disabled=idx==chapters.length-1;
+const mc=22-c.online;
+const miss=new Set(order.slice(0,mc));
+const alive=new Set(all.filter(n=>!miss.has(n)));
+roster.innerHTML='<b style="color:#fff">Чаттерсы ('+alive.size+'/22):</b><br>'+all.map(n=>{const a=alive.has(n);return '<span>'+(a?'●':'○')+' '+n+'</span>'}).join('<br>');
+syncChat(i);
+chatcount.textContent=alive.size+' watching';
+armFinale();
+}
+document.getElementById('prev').onclick=()=>go(idx-1);
+document.getElementById('next').onclick=()=>go(idx+1);
+document.addEventListener('keydown',e=>{
+if(document.body.classList.contains('final-show')){location.href='index2.html';return}
+if(e.key==='ArrowRight')go(idx+1);
+if(e.key==='ArrowLeft')go(idx-1);
+});
+document.addEventListener('mousedown',()=>{
+if(document.body.classList.contains('final-show'))location.href='index2.html';
+});
+go(0);
+document.getElementById('fakeinput').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.value.trim()){const box=document.getElementById('chatbox');const d=document.createElement('div');d.className='tmsg';const s1=document.createElement('span');s1.className='tuser';s1.style.color='#fff';s1.textContent='you';const s2=document.createElement('span');s2.textContent=': '+e.target.value;box.appendChild(d);d.appendChild(s1);d.appendChild(s2);box.scrollTop=box.scrollHeight;e.target.value=''}});
+const cv=document.getElementById('magic'),ctx=cv.getContext('2d');let W,H,P=[];function rs(){W=cv.width=innerWidth;H=cv.height=innerHeight}rs();addEventListener('resize',rs);
+for(let i=0;i<40;i++)P.push({x:Math.random()*2000,y:Math.random()*1200,r:Math.random()*2+1,s:Math.random()*.8+.2});
+function loop(){ctx.clearRect(0,0,W,H);P.forEach(p=>{p.y-=p.s;if(p.y<-10){p.y=H+10;p.x=Math.random()*W}ctx.fillStyle='rgba(145,70,255,.6)';ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill()});requestAnimationFrame(loop)}loop();
+/* --- Halloween FX: trail, ghosts, bats --- */
+const TRAIL_EMOJI=['✨','💜','🦇','🎃','👻','🕸️'];
+let lastTrail=0;
+addEventListener('mousemove',e=>{
+const now=performance.now(); if(now-lastTrail<45) return; lastTrail=now;
+const s=document.createElement('span'); s.className='trail';
+s.textContent=TRAIL_EMOJI[Math.floor(Math.random()*TRAIL_EMOJI.length)];
+s.style.left=e.clientX+'px'; s.style.top=e.clientY+'px';
+s.style.fontSize=(10+Math.random()*14)+'px';
+document.body.appendChild(s); s.addEventListener('animationend',()=>s.remove()); setTimeout(()=>s.remove(),1200);
+});
+function spawnGhost(){
+if(document.querySelectorAll('.ghost').length>4) return;
+const g=document.createElement('div'); g.className='ghost'; g.textContent='👻';
+g.style.left=(Math.random()*92)+'vw'; g.style.top=(15+Math.random()*65)+'vh';
+g.style.fontSize=(24+Math.random()*44)+'px';
+document.body.appendChild(g); g.addEventListener('animationend',()=>g.remove()); setTimeout(()=>g.remove(),7500);
+}
+setInterval(spawnGhost, 3800); setTimeout(spawnGhost, 1200);
+setInterval(()=>{
+if(document.querySelector('.batfly')) return;
+const b=document.createElement('div'); b.className='batfly'; b.textContent='🦇🦇🦇';
+b.style.top=(4+Math.random()*20)+'%';
+document.body.appendChild(b); b.addEventListener('animationend',()=>b.remove()); setTimeout(()=>b.remove(),9500);
+}, 11000);
+/* --- Halloween lo-fi (WebAudio, no files) --- */
+let AC=null, musicOn=false, musicTimer=null, padNodes=[];
+const MELODY=[440,0,392,0,329.63,293.66,261.63,0,246.94,0,293.66,329.63,440,0,220,0];
+function startMusic(){
+AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+AC.resume();
+const master=AC.createGain(); master.gain.value=0.16; master.connect(AC.destination);
+const delay=AC.createDelay(); delay.delayTime.value=0.34;
+const fb=AC.createGain(); fb.gain.value=0.35;
+delay.connect(fb); fb.connect(delay); delay.connect(master);
+[[110,'triangle'],[164.81,'sine'],[220,'sine']].forEach(([f,t])=>{
+const o=AC.createOscillator(),g=AC.createGain(),fl=AC.createBiquadFilter();
+o.type=t;o.frequency.value=f;fl.type='lowpass';fl.frequency.value=700;
+g.gain.value=0.05;o.connect(fl);fl.connect(g);g.connect(master);o.start();
+padNodes.push(o);
+const lfo=AC.createOscillator(),lg=AC.createGain();
+lfo.frequency.value=0.08+Math.random()*0.05;lg.gain.value=0.02;
+lfo.connect(lg);lg.connect(g.gain);lfo.start();padNodes.push(lfo);
+});
+const len=AC.sampleRate*1.2, buf=AC.createBuffer(1,len,AC.sampleRate), d=buf.getChannelData(0);
+for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*(Math.random()<0.001?1:0.015);
+const ns=AC.createBufferSource(); ns.buffer=buf; ns.loop=true;
+const nf=AC.createBiquadFilter(); nf.type='lowpass'; nf.frequency.value=2500;
+const ng=AC.createGain(); ng.gain.value=0.05;
+ns.connect(nf);nf.connect(ng);ng.connect(master);ns.start(); padNodes.push(ns);
+let step=0;
+musicTimer=setInterval(()=>{
+if(!musicOn) return;
+const f=MELODY[step%MELODY.length]; step++;
+if(!f) return;
+const o=AC.createOscillator(),g=AC.createGain();
+o.type='sine';o.frequency.value=f;
+const t=AC.currentTime;
+g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.5,t+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t+0.9);
+o.connect(g);g.connect(master);g.connect(delay);
+o.start(t);o.stop(t+1);
+},300);
+document.getElementById('musicbtn').textContent='🎃 Выключить звук';
+document.getElementById('musicbtn').classList.add('on');
+AC._master=master;
+}
+function stopMusic(){
+musicOn=false;
+clearInterval(musicTimer); musicTimer=null;
+padNodes.forEach(n=>{try{n.stop()}catch(e){}}); padNodes=[];
+if(AC&&AC._master){try{AC._master.disconnect()}catch(e){}}
+document.getElementById('musicbtn').textContent='🎃 Включить звук';
+document.getElementById('musicbtn').classList.remove('on');
+}
+document.getElementById('musicbtn').onclick=()=>{
+if(musicOn){stopMusic();return}
+musicOn=true; startMusic();
+};
+/* автозапуск: пытаемся включить сразу; если браузер блокирует — включаем при первом клике/нажатии */
+musicOn=true; startMusic();
+(function(){
+const unlock=()=>{ if(AC&&AC.state==='suspended'){AC.resume()} };
+document.addEventListener('click',unlock);
+document.addEventListener('keydown',unlock);
+document.addEventListener('mousemove',unlock);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>kuromur — чёрная дыра • театр призраков</title>
+<style>
+*{box-sizing:border-box}
+:root{--bg:#0e0e10;--panel:#1f1f23;--panel2:#18181b;--border:#2f2f35;--purple:#9146ff;--text:#efeff1;--muted:#adadb8;--red:#eb0400;--orange:#ff7a00;--gold:#ffcf6b}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Helvetica,Arial,sans-serif;cursor:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32'><text y='25' font-size='24'>🎃</text></svg>") 16 16, auto;overflow-x:hidden}
+a,button{cursor:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32'><text y='25' font-size='24'>👆</text></svg>") 16 16, pointer}
+.trail{position:fixed;z-index:90;pointer-events:none;animation:trailfloat 1s ease-out forwards}
+@keyframes trailfloat{0%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(0)}100%{opacity:0;transform:translate(-50%,-160%) scale(.3) rotate(40deg)}}
+/* ============ АКТ 1: копия финала ============ */
+#page1{margin:0;padding:0;transition:transform 3.5s ease-in,opacity 3s ease-in,filter 3.5s ease-in;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000}
+#destoyimg{width:100vw;height:100vh;object-fit:contain;background:#000;display:block}
+.chatline{background:#101014;border-left:3px solid var(--purple);padding:5px 9px;margin:5px 0;border-radius:0 6px 6px 0;font-family:Consolas,monospace;font-size:13px}
+.chatline.kuro{border-left-color:#ffd166}
+.nick-mod{color:#00f593;font-weight:700}.nick-vip{color:#ff71ce;font-weight:700}.nick-user{color:#5aa9ff}.nick-kuro{color:#ffd166;font-weight:700}
+.text{font-size:15px;line-height:1.7;color:#d8d8de}
+/* ============ Чёрная дыра ============ */
+#holeVeil{position:fixed;inset:0;pointer-events:none;z-index:50;display:flex;align-items:center;justify-content:center}
+#holeVeil .ring{width:0;height:0;border-radius:50%;background:radial-gradient(circle,#000 55%,rgba(0,0,0,0) 72%);transition:width 3.6s ease-in,height 3.6s ease-in}
+body.sucking #holeVeil .ring{width:160vmax;height:160vmax}
+body.sucking #page1{transform:scale(.5) rotate(5deg);opacity:0;filter:blur(8px) brightness(.35)}
+#hole{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#000;z-index:60;flex-direction:column;gap:18px}
+body.hole #hole{display:flex}
+#hole .core{width:32vmin;height:32vmin;border-radius:50%;background:#000;box-shadow:0 0 40px 12px rgba(255,122,0,.55),0 0 100px 34px rgba(145,70,255,.4);animation:holepulse 2.2s ease-in-out infinite}
+@keyframes holepulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+#hole p{color:var(--muted);font-size:13px;letter-spacing:2px}
+#flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:70;transition:opacity .3s}
+body.flash #flash{opacity:1}
+/* ============ АКТ 3: театр ============ */
+#theater{display:none;min-height:100vh;background:#050508}
+body.theater #theater{display:grid;grid-template-columns:92px 1fr 92px;height:100vh;overflow:hidden}
+body.theater #page1,body.theater #hole{display:none}
+.wall{background:linear-gradient(180deg,#1a0d12,#0d0710);border-left:1px solid #3a1520;border-right:1px solid #3a1520;position:relative;overflow:hidden;filter:brightness(.65);font-size:26px}
+.wall .deco{position:absolute;left:50%;transform:translateX(-50%);opacity:.9}
+.spider{position:absolute;left:50%;margin-left:-14px;font-size:28px;animation:climb 8s linear infinite}
+.spider::before{content:'';position:absolute;left:50%;top:-120px;width:1px;height:120px;background:rgba(255,255,255,.25)}
+@keyframes climb{0%{top:-10%}100%{top:110%}}
+.center{display:flex;flex-direction:column;min-width:0;min-height:0;height:100vh;overflow:hidden}
+.stage{position:relative;background:#0a0a10;padding:28px 24px 12px;overflow:hidden;border-bottom:2px solid #3a2a12;flex:1 1 auto;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.garland{position:absolute;top:6px;left:0;right:0;text-align:center;font-size:22px;letter-spacing:6px;z-index:3}
+.screen{position:relative;width:min(860px,100%,96vh);margin:0 auto;aspect-ratio:16/9;background:#000;border:3px solid #8a6a2a;border-radius:10px;overflow:hidden;box-shadow:0 0 50px rgba(255,210,120,.25)}
+.screen img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .7s ease;z-index:1}
+#shadelayer{position:absolute;inset:0;background:#000;opacity:.9;pointer-events:none;z-index:5;transition:opacity .6s ease}
+.screen img.on{opacity:1;animation:kenburns 7s ease-out forwards}
+@keyframes kenburns{from{transform:scale(1)}to{transform:scale(1.1)}}
+.screen .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--muted);font-size:14px;z-index:6}
+.beam{position:absolute;top:0;height:100%;width:110px;background:linear-gradient(to bottom,rgba(255,240,190,.45),transparent 78%);clip-path:polygon(42% 0,58% 0,100% 100%,0 100%);filter:blur(7px);pointer-events:none;animation:beamsway 7s ease-in-out infinite alternate;transform-origin:top center;z-index:2}
+@keyframes beamsway{from{transform:rotate(-4deg)}to{transform:rotate(4deg)}}
+.stagecap{text-align:center;color:var(--gold);font-size:13px;margin-top:6px;letter-spacing:1px}
+.seats{background:#08080c;padding:clamp(8px,1.5vh,20px) clamp(10px,3vw,26px) clamp(16px,3vh,36px);filter:brightness(.85);flex:0 0 auto}
+.seatgrid{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:clamp(5px,1.2vw,12px);max-width:860px;margin:0 auto}
+.seat{border:2px solid rgba(46,255,122,.4);border-radius:8px;min-height:clamp(36px,7vh,64px);display:flex;align-items:center;justify-content:center;background:#0d1110;font-size:clamp(20px,4.5vh,34px)}
+@media (max-width:700px){
+body.theater #theater{grid-template-columns:34px minmax(0,1fr) 34px}
+.wall{font-size:16px}
+.stage{padding:20px 8px 12px}
+.screen{border-width:2px}
+.seat{min-height:clamp(32px,5.5vh,46px);font-size:clamp(18px,4vh,22px)}
+#hint{font-size:14px;padding:8px 16px;max-width:92vw;text-align:center}
+}
+.seat .g{animation:bob 3s ease-in-out infinite;cursor:grab;touch-action:none;user-select:none}
+.seat .g.dragging{position:fixed;z-index:90;margin:0;transform:translate(-50%,-60%) scale(1.25);animation:none;filter:drop-shadow(0 0 14px rgba(255,255,255,.7));pointer-events:none}
+.seat .g.jump{animation:jump .45s ease}
+@keyframes jump{0%{transform:translateY(0) scale(1)}40%{transform:translateY(-22px) scale(1.1)}100%{transform:translateY(0) scale(1)}}
+.boo{position:fixed;z-index:91;pointer-events:none;background:#fff;color:#1a0010;font-weight:800;font-size:18px;padding:6px 14px;border-radius:14px;transform:translate(-50%,-130%);box-shadow:0 0 16px rgba(255,255,255,.6);animation:boofade 1.3s ease-out forwards;white-space:nowrap}
+@keyframes boofade{0%{opacity:0;transform:translate(-50%,-90%) scale(.6)}15%{opacity:1;transform:translate(-50%,-130%) scale(1.1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-190%) scale(1)}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.seat.empty{border-style:dashed;opacity:.5}
+.seatcap{text-align:center;color:var(--muted);font-size:12px;margin-top:14px}
+#hint{position:fixed;top:64px;left:50%;transform:translateX(-50%) scale(.9);z-index:85;background:rgba(20,8,30,.92);border:2px solid var(--gold);color:var(--gold);font-weight:800;font-size:18px;padding:10px 26px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .4s,transform .4s;box-shadow:0 0 24px rgba(255,207,107,.5)}
+#hint.show{opacity:1;transform:translateX(-50%) scale(1)}
+#endoverlay{position:fixed;inset:0;z-index:95;display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px;background:rgba(0,0,0,.82)}
+body.ended #endoverlay{display:flex}
+body.blackout{background:#000}
+body.blackout #theater{opacity:0;transition:opacity 1s ease}
+/* Битое стекло: трещины + осколки, до 10 секунд */
+#shatter{position:fixed;inset:0;z-index:93;display:none;pointer-events:none;overflow:hidden;background:radial-gradient(circle at 50% 42%,#0b0b14 0%,#000 70%)}
+body.shatter #shatter{display:block}
+#shatter svg{position:absolute;inset:0;width:100%;height:100%}
+#shatter .crack{fill:none;stroke:rgba(200,220,255,.85);stroke-width:2;filter:drop-shadow(0 0 6px rgba(150,200,255,.8));stroke-dasharray:1000;stroke-dashoffset:1000}
+body.shatter #shatter .crack{animation:crackdraw 3.5s ease-out forwards}
+body.shatter #shatter .crack.d1{animation-delay:.6s}
+body.shatter #shatter .crack.d2{animation-delay:1.2s}
+body.shatter #shatter .crack.d3{animation-delay:1.8s}
+body.shatter #shatter .crack.d4{animation-delay:2.4s}
+body.shatter #shatter .crack.d5{animation-delay:3s}
+@keyframes crackdraw{to{stroke-dashoffset:0}}
+.shard{position:absolute;top:-46px;background:linear-gradient(135deg,rgba(190,215,255,.75),rgba(120,150,200,.2));clip-path:polygon(50% 0,100% 100%,0 100%);animation:shardfall linear forwards}
+@keyframes shardfall{to{transform:translateY(118vh) rotate(540deg);opacity:0}}
+#endoverlay h2{font-size:clamp(28px,6vw,52px);margin:0;letter-spacing:4px;text-align:center;text-shadow:0 0 30px var(--purple)}
+#endoverlay button{background:var(--purple);border:0;color:#fff;font-size:17px;font-weight:700;padding:14px 30px;border-radius:12px;cursor:pointer;box-shadow:0 0 24px rgba(145,70,255,.7)}
+#gallery{position:fixed;inset:0;z-index:96;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:rgba(0,0,0,.94)}
+#gallery.open{display:flex}
+#galstrip{display:flex;align-items:center;justify-content:center;max-width:92vw}
+#galstrip img{max-height:72vh;max-width:88vw;border-radius:10px;border:2px solid #8a6a2a}
+#galbar{display:flex;gap:12px;align-items:center}
+#galcount{color:var(--muted);font-size:14px;min-width:60px;text-align:center}
+#galbar{display:flex;gap:12px;align-items:center}
+#galbar button{background:#2f2f35;border:1px solid #53535f;color:#fff;font-size:18px;padding:8px 18px;border-radius:8px;cursor:pointer}
+.g-poof{animation:poof .45s ease-out forwards}
+@keyframes poof{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.8)}}
+.g-pop{animation:pop .4s ease-out}
+@keyframes pop{0%{opacity:0;transform:scale(.2)}70%{opacity:1;transform:scale(1.2)}100%{opacity:1;transform:scale(1)}}
+#mutebtn{position:fixed;bottom:18px;left:18px;z-index:88;background:#2f2f35;border:1px solid #53535f;color:#fff;font-size:14px;font-weight:700;padding:11px 16px;border-radius:999px;cursor:pointer;display:none}
+body.theater #mutebtn{display:block}
+#mutebtn.off{opacity:.6}
+@keyframes mimicpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+a{color:#bf94ff}
+</style>
+</head>
+<body>
+<!-- АКТ 1: destroy.png на весь экран — её поглощает чёрная дыра -->
+<div id="page1">
+<img id="destoyimg" src="destroy.png" alt="destroy">
+</div>
+<div id="holeVeil"><div class="ring"></div></div>
+<div id="shatter"><svg viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice"><path class="crack" d="M500,300 L420,220 L360,180 L300,120"/><path class="crack d1" d="M500,300 L590,230 L660,200 L740,150"/><path class="crack d2" d="M500,300 L460,390 L430,470 L410,560"/><path class="crack d3" d="M500,300 L580,370 L640,440 L700,520"/><path class="crack d4" d="M500,300 L380,330 L260,340 L140,330"/><path class="crack d5" d="M500,300 L620,300 L750,290 L880,300"/></svg></div>
+<div id="hole"><div class="core"></div></div>
+<div id="flash"></div>
+<!-- АКТ 3: театр -->
+<div id="theater">
+<div class="wall" id="wallL"><div class="deco" style="top:8px">🕸️</div><div class="deco" style="top:44%">🎃</div><div class="deco" style="bottom:8px">🕸️</div></div>
+<div class="center">
+<div class="stage">
+<div class="garland">🎃🦇🍬🕸️🍬🦇🎃</div>
+<div class="beam" style="left:12%"></div>
+<div class="beam" style="left:44%;animation-delay:-2.5s"></div>
+<div class="beam" style="left:76%;animation-delay:-5s"></div>
+<div class="screen" id="screen"><div class="ph" id="screenph"><div style="font-size:40px">🎃</div><div>загружаю сцену…</div></div><div id="shadelayer"></div></div>
+<div class="stagecap"><span id="gcount">👻 15</span></div>
+</div>
+<div class="seats"><div class="seatgrid" id="seatgrid"></div></div>
+</div>
+<div class="wall" id="wallR"><div class="deco" style="top:8px">🕸️</div><div class="deco" style="top:44%">🎃</div><div class="deco" style="bottom:8px">🕸️</div></div>
+</div>
+<button id="mutebtn" title="Выключить/включить музыку">🔊 звук вкл</button>
+<div id="hint">Привидения постоянно прибывают! Избавься от них соединяя по 3 в столбик</div>
+<div id="endoverlay"><h2>поздравляем вы выбрались!</h2><button id="showallbtn">показать все картинки</button></div>
+<div id="gallery"><div id="galstrip"></div><div id="galbar"><button id="galleft">‹ назад</button><span id="galcount">1 / 6</span><button id="galright">вперёд ›</button><button id="galclose">закрыть ✕</button></div></div>
+<script>
+"use strict";
+/* destroy.png уже лежит рядом — если нет, пробуем destoy.png, потом заглушка */
+(function(){
+const di=document.getElementById('destoyimg');
+if(!di) return;
+di.onerror=()=>{
+if(di.src.endsWith('destroy.png')){ di.src='destoy.png'; return; }
+const ph=document.createElement('div');
+ph.style.fontSize='90px'; ph.textContent='🎃';
+di.replaceWith(ph);
+};
+if(di.complete&&di.naturalWidth===0) di.onerror();
+})();
+/* Шлейф хеллоуин-узоров за мышкой */
+const TRAIL=['🎃','🦇','👻','✨','🕸️','🍬','💜','🕷️'];
+let lastTrail=0;
+addEventListener('mousemove',e=>{
+const now=performance.now(); if(now-lastTrail<50) return; lastTrail=now;
+const s=document.createElement('span'); s.className='trail';
+s.textContent=TRAIL[Math.floor(Math.random()*TRAIL.length)];
+s.style.left=e.clientX+'px'; s.style.top=e.clientY+'px';
+s.style.fontSize=(10+Math.random()*14)+'px';
+document.body.appendChild(s);
+s.addEventListener('animationend',()=>s.remove());
+setTimeout(()=>s.remove(),1200);
+});
+/* Звук разбивающегося стекла + пауза фоновой музыки на время анимации */
+function pauseMusic(){ musicOn=false; try{ if(AC) AC.suspend(); }catch(e){} }
+function resumeMusic(){ try{ if(AC) AC.resume(); }catch(e){} if(!muted) musicOn=true; }
+function glassCrash(){
+if(!AC||muted) return;
+try{
+const t0=AC.currentTime;
+const len=Math.floor(AC.sampleRate*0.5),buf=AC.createBuffer(1,len,AC.sampleRate),d=buf.getChannelData(0);
+for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2);
+const ns=AC.createBufferSource(); ns.buffer=buf;
+const hf=AC.createBiquadFilter(); hf.type='highpass'; hf.frequency.value=2500;
+const ng=AC.createGain(); ng.gain.value=0.5;
+ns.connect(hf); hf.connect(ng); ng.connect(AC._master); ns.start(t0);
+for(let k=0;k<9;k++){
+const o=AC.createOscillator(),g=AC.createGain();
+const t=t0+Math.random()*0.9;
+o.type='triangle'; o.frequency.value=1800+Math.random()*3200;
+g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.22,t+0.01); g.gain.exponentialRampToValueAtTime(0.0001,t+0.35);
+o.connect(g); g.connect(AC._master); o.start(t); o.stop(t+0.4);
+}
+}catch(e){}
+}
+/* Таймлайн: 2с destoy → втягивание (3.6с) → дыра (2.6с) → вспышка → театр */
+setTimeout(()=>document.body.classList.add('sucking'),2000);
+setTimeout(()=>{
+document.body.classList.remove('sucking');
+document.body.classList.add('hole');
+},5800);
+setTimeout(()=>{
+document.body.classList.add('flash');
+setTimeout(()=>{
+document.body.classList.remove('hole','flash');
+document.body.classList.add('theater');
+initTheater();
+},450);
+},8400);
+/* Пауки по стенкам */
+function spiders(wallId){
+const wall=document.getElementById(wallId);
+for(let i=0;i<2;i++){
+const s=document.createElement('div');s.className='spider';s.textContent='🕷️';
+s.style.animationDuration=(6+i*3+Math.random()*2)+'s';
+s.style.animationDelay=(-Math.random()*8)+'s';
+wall.appendChild(s);
+}
+}
+spiders('wallL');spiders('wallR');
+/* Места: призраки смотрят сцену. Их можно таскать, по клику — «Бууууу» */
+const grid=document.getElementById('seatgrid');
+(function(){
+/* 27 мест: 9 колонок x 3 ряда, 15 призраков */
+const ghosts=['👻','👻','','👻','','👻','👻','','👻', '', '👻','👻','','👻','','👻','','👻', '👻','','👻','','👻','👻','','👻',''];
+ghosts.forEach((g,i)=>{
+const s=document.createElement('div');s.className='seat'+(g?'':' empty');
+s.innerHTML=g?`<span class="g" style="animation-delay:${(-Math.random()*3).toFixed(1)}s">${g}</span>`:'';
+grid.appendChild(s);
+});
+})();
+function refreshSeat(s){ s.classList.toggle('empty', !s.querySelector('.g')); }
+function boo(g){
+const r=g.getBoundingClientRect();
+const b=document.createElement('div'); b.className='boo'; b.textContent='Бууууу!';
+b.style.left=(r.left+r.width/2)+'px'; b.style.top=r.top+'px';
+document.body.appendChild(b); setTimeout(()=>b.remove(),1350);
+g.classList.remove('jump'); void g.offsetWidth; g.classList.add('jump');
+if(musicOn&&AC){ try{
+const o=AC.createOscillator(),gn=AC.createGain(),t=AC.currentTime;
+o.type='sine'; o.frequency.setValueAtTime(820,t); o.frequency.exponentialRampToValueAtTime(380,t+0.22);
+gn.gain.setValueAtTime(0.25,t); gn.gain.exponentialRampToValueAtTime(0.0001,t+0.25);
+o.connect(gn); gn.connect(AC._master); o.start(t); o.stop(t+0.3);
+}catch(e){} }
+}
+let drag=null;
+grid.addEventListener('pointerdown',e=>{
+const g=e.target.closest?e.target.closest('.g'):null; if(!g) return;
+e.preventDefault();
+const seatEl=g.parentElement;
+drag={g,fromSeat:[...grid.children].indexOf(seatEl),x0:e.clientX,y0:e.clientY,moved:false};
+});
+grid.addEventListener('pointermove',e=>{
+if(!drag) return;
+if(Math.hypot(e.clientX-drag.x0,e.clientY-drag.y0)>6){
+drag.moved=true;
+drag.g.classList.add('dragging');
+drag.g.style.left=e.clientX+'px'; drag.g.style.top=e.clientY+'px';
+}
+});
+grid.addEventListener('pointerup',e=>{
+if(!drag) return;
+const {g,fromSeat,moved}=drag; drag=null;
+g.classList.remove('dragging'); g.style.left=''; g.style.top='';
+if(!moved){ boo(g); return; }
+const seats=[...grid.children]; let best=-1,bd=1e9;
+seats.forEach((s,i)=>{const r=s.getBoundingClientRect();const d=Math.hypot(e.clientX-(r.left+r.width/2),e.clientY-(r.top+r.height/2));if(d<bd){bd=d;best=i}});
+if(best<0||best===fromSeat) return;
+const a=seats[fromSeat],b=seats[best];
+const ga=a.querySelector('.g'),gb=b.querySelector('.g');
+if(gb) b.removeChild(gb);
+if(ga) a.removeChild(ga);
+if(gb) a.appendChild(gb);
+if(ga) b.appendChild(ga);
+refreshSeat(a); refreshSeat(b); refreshCount();
+queueCheck();
+});
+grid.addEventListener('pointercancel',()=>{ if(!drag) return; drag.g.classList.remove('dragging'); drag.g.style.left=''; drag.g.style.top=''; drag=null; });
+/* --- Игра «Собери ряд»: колонка из 3 призраков исчезает, +2 новых.
+   В конце остаётся ровно 3 — последний ряд исчезает без возврата. --- */
+function seatGhost(s){ return s.querySelector('.g'); }
+function ghostCount(){ return [...grid.children].filter(seatGhost).length; }
+function refreshCount(){ const el=document.getElementById('gcount'); if(el) el.textContent='👻 '+ghostCount(); }
+function fullColumn(){
+for(let c=0;c<9;c++){
+if(seatGhost(grid.children[c])&&seatGhost(grid.children[c+9])&&seatGhost(grid.children[c+18])) return c;
+}
+return -1;
+}
+function clearColumn(c){
+for(let r=0;r<3;r++){
+const s=grid.children[c+r*9];
+const g=seatGhost(s);
+if(!g) continue;
+const p=document.createElement('span'); p.className='g-poof'; p.textContent='💨';
+s.replaceChild(p,g);
+setTimeout(((seat,el)=>()=>{ if(el.parentElement===seat) seat.removeChild(el); refreshSeat(seat); })(s,p),420);
+}
+ refreshCount();
+ shadeLeft=Math.max(0,shadeLeft-0.02);
+ document.getElementById('shadelayer').style.opacity=shadeLeft.toFixed(2);
+}
+let shadeLeft=0.9;
+function spawnGhosts(n){
+const empty=[...grid.children].filter(s=>!seatGhost(s));
+for(let k=0;k<n&&empty.length;k++){
+const s=empty.splice(Math.floor(Math.random()*empty.length),1)[0];
+const g=document.createElement('span'); g.className='g g-pop'; g.textContent='👻';
+g.style.animationDelay='0s';
+s.appendChild(g); refreshSeat(s);
+}
+refreshCount();
+}
+let shardTimer=null;
+function startShards(){
+const layer=document.getElementById('shatter');
+shardTimer=setInterval(()=>{
+if(document.querySelectorAll('.shard').length>26) return;
+const s=document.createElement('div'); s.className='shard';
+const sz=12+Math.random()*24;
+s.style.left=(Math.random()*98)+'vw';
+s.style.width=sz+'px'; s.style.height=(sz*1.2)+'px';
+s.style.animationDuration=(3+Math.random()*3)+'s';
+layer.appendChild(s);
+s.addEventListener('animationend',()=>s.remove());
+setTimeout(()=>s.remove(),7000);
+},320);
+}
+function endGame(){
+document.body.classList.add('blackout');
+if(hintTimer){clearInterval(hintTimer);hintTimer=null}
+setTimeout(()=>{
+document.body.classList.add('shatter');
+pauseMusic();
+glassCrash();
+startShards();
+setTimeout(()=>{
+if(shardTimer){clearInterval(shardTimer);shardTimer=null}
+document.getElementById('shatter').querySelectorAll('.shard').forEach(s=>s.remove());
+document.body.classList.remove('shatter');
+document.body.classList.add('ended');
+resumeMusic();
+},10000);
+},1200);
+}
+let busy=false;
+function queueCheck(){
+setTimeout(function tryCheck(){
+if(busy){ setTimeout(tryCheck,300); return; }
+checkColumns();
+},80);
+}
+function checkColumns(){
+if(document.body.classList.contains('ended')) return;
+if(busy) return;
+const c=fullColumn();
+if(c<0){
+const left=ghostCount();
+if(left>0&&left<3) spawnGhosts(3-left);
+return;
+}
+busy=true;
+clearColumn(c);
+setTimeout(()=>{
+const left=ghostCount();
+if(left===0){ busy=false; endGame(); }
+else{ spawnGhosts(2); busy=false; checkColumns(); }
+refreshCount();
+},480);
+}
+/* Подсказка «Собери ряд» периодически */
+let hintTimer=null;
+function showHint(){
+const h=document.getElementById('hint');
+h.classList.add('show');
+setTimeout(()=>h.classList.remove('show'),5000);
+}
+/* --- Динамический поиск картинок ---
+   Сцена: все preview.image.*.png (прозвон 1..60).
+   Галерея: все *.png из папки (листинг сервера) + найденное для сцены. */
+function probe(url){
+return new Promise(res=>{
+const im=new Image();
+im.onload=()=>res(true);
+im.onerror=()=>res(false);
+im.src=url;
+});
+}
+async function listDirPng(){
+try{
+const base=new URL('.',location.href).href;
+if(!/^https?:/i.test(base)) return [];
+const r=await fetch(base,{cache:'no-store'});
+if(!r.ok) return [];
+const html=await r.text();
+const out=[];const re=/href="([^"]+)"/gi;let m;
+while((m=re.exec(html))){
+const name=decodeURIComponent(m[1]).split('/').pop();
+if(/\.png$/i.test(name)&&!out.includes(name)) out.push(name);
+}
+return out;
+}catch(e){ return []; }
+}
+async function discoverStage(){
+const found=[];let miss=0;
+for(let n=1;n<=60&&miss<3;n++){
+const png=`preview.image.${n}.png`;
+if(await probe(png)){ found.push({src:png,name:`preview.image.${n}`}); miss=0; continue; }
+const jpg=`preview.image.${n}.jpg`;
+if(await probe(jpg)){ found.push({src:jpg,name:`preview.image.${n}`}); miss=0; continue; }
+miss++;
+}
+return found;
+}
+/* Галерея: по одной картинке, листание туда-обратно */
+let galIdx=0;
+let galleryList=[];
+function galShow(i){
+if(!galleryList.length) return;
+galIdx=(i+galleryList.length)%galleryList.length;
+const strip=document.getElementById('galstrip');
+strip.innerHTML='';
+const s=galleryList[galIdx];
+const im=new Image(); im.alt=s.name;
+im.onerror=()=>{ strip.innerHTML='<p style="color:var(--muted)">не открылось: '+s.src+'</p>'; };
+im.src=s.src;
+strip.appendChild(im);
+document.getElementById('galcount').textContent=(galIdx+1)+' / '+galleryList.length;
+}
+document.getElementById('showallbtn').onclick=async ()=>{
+galleryList=[];
+const listed=await listDirPng();
+for(const n of listed){
+if(/^kuro\./i.test(n)) continue;
+galleryList.push({src:n,name:n.replace(/\.png$/i,'')});
+}
+for(const s of slides) if(!galleryList.some(g=>g.src===s.src)) galleryList.push({src:s.src,name:s.name});
+const strip=document.getElementById('galstrip');
+if(!galleryList.length){
+strip.innerHTML='<p style="color:var(--muted)">*.png не найдены — положи картинки рядом с index2.html</p>';
+document.getElementById('galcount').textContent='0 / 0';
+}else{ galShow(0); }
+document.getElementById('gallery').classList.add('open');
+};
+document.getElementById('galclose').onclick=()=>document.getElementById('gallery').classList.remove('open');
+document.getElementById('galleft').onclick=()=>galShow(galIdx-1);
+document.getElementById('galright').onclick=()=>galShow(galIdx+1);
+/* Слайды сцены строятся после автопоиска */
+let slides=[];
+const screen=document.getElementById('screen');
+let cur=-1;
+let seq=[];
+let layers=[];
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t}return a}
+function buildLayers(){
+screen.querySelectorAll('img').forEach(im=>im.remove());
+layers=[];
+slides.forEach((s,i)=>{
+const im=new Image();
+im.alt='сцена '+(i+1);
+im.onerror=()=>{ im.remove(); };
+im.src=s.src;
+screen.appendChild(im);
+layers.push(im);
+});
+seq=slides.map((_,i)=>i); shuffle(seq); cur=-1;
+}
+function showSlide(i){
+if(!slides.length) return;
+cur=i;
+layers.forEach((im,j)=>{
+im.classList.remove('on'); void im.offsetWidth;
+if(j===i) im.classList.add('on');
+});
+document.getElementById('screenph').style.display='none';
+}
+function nextSlide(){ if(!slides.length) return; const nxt=(seq.indexOf(cur)+1)%seq.length; if(nxt===0&&seq.length>1) shuffle(seq); showSlide(seq[nxt]); }
+/* Музыкальная шкатулка: чистый звук без шипения —
+   медленная минорная колыбельная + мягкий бас. Никакого треска и хэтов. */
+let AC=null,musicOn=false,musicTimer=null,padNodes=[],stepCount=0,fallbackTimer=null;
+const MELODY=[880,0,659.26,587.33,523.25,587.33,659.26,0,880,0,987.77,880,784,659.26,587.33,0,880,0,659.26,587.33,523.25,587.33,659.26,0,783.99,659.26,587.33,523.25,440,0,0,0];
+const BASSROOTS=[55,43.65,65.41,49];
+function startMusic(){
+AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+AC.resume();
+const BASE_VOL=0.1;
+const master=AC.createGain(); master.gain.value=BASE_VOL; master.connect(AC.destination);
+const delay=AC.createDelay(); delay.delayTime.value=0.42;
+const fb=AC.createGain(); fb.gain.value=0.3;
+delay.connect(fb); fb.connect(delay); delay.connect(master);
+function box(freq,dur,vol){
+const t=AC.currentTime;
+const o1=AC.createOscillator(),o2=AC.createOscillator(),g=AC.createGain();
+o1.type='sine';o1.frequency.value=freq;
+o2.type='sine';o2.frequency.value=freq*3;
+const g2=AC.createGain();g2.gain.value=0.25;
+g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+0.015);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+o1.connect(g);o2.connect(g2);g2.connect(g);g.connect(master);g.connect(delay);
+o1.start(t);o2.start(t);o1.stop(t+dur+0.05);o2.stop(t+dur+0.05);
+}
+function bass(freq){
+const t=AC.currentTime;
+const o=AC.createOscillator(),g=AC.createGain();
+o.type='sine';o.frequency.value=freq;
+g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.18,t+0.05);g.gain.exponentialRampToValueAtTime(0.0001,t+1.6);
+o.connect(g);g.connect(master);o.start(t);o.stop(t+1.7);
+padNodes.push(o);
+}
+[[110,'sine'],[130.81,'sine'],[164.81,'sine']].forEach(([f,t])=>{
+const o=AC.createOscillator(),g=AC.createGain(),fl=AC.createBiquadFilter();
+o.type=t;o.frequency.value=f;fl.type='lowpass';fl.frequency.value=900;
+g.gain.value=0.025;o.connect(fl);fl.connect(g);g.connect(master);o.start();padNodes.push(o);
+const lfo=AC.createOscillator(),lg=AC.createGain();
+lfo.frequency.value=0.12;lg.gain.value=0.008;
+lfo.connect(lg);lg.connect(g.gain);lfo.start();padNodes.push(lfo);
+});
+let step=0;
+musicTimer=setInterval(()=>{
+if(!musicOn) return;
+const f=MELODY[step%MELODY.length];
+if(step%32===0) bass(BASSROOTS[(step/32)%BASSROOTS.length|0]);
+step++; stepCount++;
+if(stepCount%8===0) nextSlide();
+if(!f) return;
+box(f,1.1,0.25);
+},260);
+AC._master=master;
+if(fallbackTimer){clearInterval(fallbackTimer);fallbackTimer=null}
+}
+let muted=false;
+function setMuted(m){
+muted=m;
+const b=document.getElementById('mutebtn');
+b.textContent=muted?'🔇 звук выкл':'🔊 звук вкл';
+b.classList.toggle('off',muted);
+if(!AC) return;
+try{ if(m) AC.suspend(); else AC.resume(); }catch(e){}
+}
+document.getElementById('mutebtn').onclick=()=>setMuted(!muted);
+function initTheater(){
+refreshCount();
+setTimeout(showHint,6000);
+hintTimer=setInterval(showHint,30000);
+fallbackTimer=setInterval(()=>{ if(!musicOn) nextSlide(); },2500);
+discoverStage().then(found=>{
+slides=found;
+buildLayers();
+if(slides.length){ showSlide(seq[0]); }
+else{
+const ph=document.getElementById('screenph');
+ph.style.display='flex';
+ph.innerHTML='<div style="font-size:40px">🎃</div><div>положи preview.image.1.png рядом с index2.html</div>';
+}
+});
+try{
+musicOn=true; startMusic();
+}catch(e){
+musicOn=false;
+}
+}
+</script>
+</body>
+</html>
