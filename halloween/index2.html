@@ -93,6 +93,8 @@ body.shatter #shatter .crack.d5{animation-delay:3s}
 @keyframes shardfall{to{transform:translateY(118vh) rotate(540deg);opacity:0}}
 #endoverlay h2{font-size:clamp(28px,6vw,52px);margin:0;letter-spacing:4px;text-align:center;text-shadow:0 0 30px var(--purple)}
 #endoverlay button{background:var(--purple);border:0;color:#fff;font-size:17px;font-weight:700;padding:14px 30px;border-radius:12px;cursor:pointer;box-shadow:0 0 24px rgba(145,70,255,.7)}
+#endoverlay a{display:inline-block;background:#2f2f35;border:1px solid #53535f;color:#fff;font-size:15px;font-weight:700;padding:13px 26px;border-radius:12px;text-decoration:none;cursor:pointer}
+#endoverlay a:hover{border-color:var(--purple);color:var(--purple)}
 #gallery{position:fixed;inset:0;z-index:96;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:rgba(0,0,0,.94)}
 #gallery.open{display:flex}
 #galstrip{display:flex;align-items:center;justify-content:center;max-width:92vw}
@@ -139,7 +141,7 @@ a{color:#bf94ff}
 </div>
 <button id="mutebtn" title="Выключить/включить музыку">🔊 звук вкл</button>
 <div id="hint">Привидения постоянно прибывают! Избавься от них соединяя по 3 в столбик</div>
-<div id="endoverlay"><h2>поздравляем вы выбрались!</h2><button id="showallbtn">показать все картинки</button></div>
+<div id="endoverlay"><h2>поздравляем вы выбрались!</h2><button id="showallbtn">показать все картинки</button><a href="/" title="Вернуться на главный сайт">вернуться на главный сайт</a></div>
 <div id="gallery"><div id="galstrip"></div><div id="galbar"><button id="galleft">‹ назад</button><span id="galcount">1 / 6</span><button id="galright">вперёд ›</button><button id="galclose">закрыть ✕</button></div></div>
 <script>
 "use strict";
