@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Страшные истории | kuromursk</title>
+  <style>
+    :root {
+      --parchment: #b9a284;
+      --parchment-dark: #8f7a5e;
+      --card: #232030;
+      --card-line: #c67a8a;
+      --text: #ded6c8;
+      --accent: #e08a3c;
+      --muted: #a89b85;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background:
+        radial-gradient(ellipse 900px 600px at 20% 10%, rgba(120, 80, 40, 0.35), transparent 60%),
+        radial-gradient(ellipse 700px 500px at 85% 80%, rgba(90, 50, 30, 0.4), transparent 60%),
+        radial-gradient(ellipse 1200px 800px at 50% 50%, var(--parchment) 0%, var(--parchment-dark) 100%);
+      color: var(--text);
+      font-family: Georgia, "Times New Roman", serif;
+      min-height: 100vh;
+      padding: 3rem 1rem 4rem;
+    }
+
+    /* лёгкая зернистость пергамента */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(rgba(60, 40, 20, 0.06) 1px, transparent 1px),
+        radial-gradient(rgba(60, 40, 20, 0.05) 1px, transparent 1px);
+      background-size: 7px 7px, 11px 11px;
+      background-position: 0 0, 4px 5px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .wrap { max-width: 760px; margin: 0 auto; position: relative; z-index: 1; }
+
+    header.page-head { text-align: center; margin-bottom: 3rem; color: #2c1c10; }
+
+    header.page-head h1 {
+      font-size: clamp(2rem, 6vw, 3.2rem);
+      letter-spacing: 0.04em;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+      color: #241608;
+    }
+
+    header.page-head .sub {
+      margin-top: 0.6rem;
+      font-style: italic;
+      color: #4a3420;
+      font-size: 1.05rem;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 1.2rem;
+      color: #241608;
+      text-decoration: none;
+      border-bottom: 1px dashed #241608;
+      font-size: 0.95rem;
+    }
+
+    .back-link:hover { color: #5a3214; border-bottom-color: #5a3214; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--card-line);
+      border-radius: 4px;
+      box-shadow: 0 10px 40px rgba(30, 15, 5, 0.45), inset 0 0 60px rgba(0, 0, 0, 0.35);
+      padding: 2rem 2.2rem;
+      margin-bottom: 2.6rem;
+    }
+
+    .card .title {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      font-weight: 600;
+      font-size: 1.15rem;
+      color: #fff;
+      margin-bottom: 1.1rem;
+      padding-bottom: 0.7rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .card .text {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      line-height: 1.75;
+      font-size: 1.05rem;
+    }
+
+    .card img { max-width: 100%; height: auto; display: block; margin: 1.2rem auto 0; border-radius: 3px; }
+
+    .card .likes {
+      margin-top: 1.3rem;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      font-size: 0.9rem;
+      color: var(--accent);
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 3rem;
+      color: #3d2a18;
+      font-size: 0.9rem;
+    }
+
+    footer a { color: #241608; }
+
+    .load-note { text-align: center; color: #3d2a18; font-style: italic; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="page-head">
+      <h1>Страшные истории 🎃</h1>
+      <p class="sub">Куро-стрим 31 октября — читаем вместе</p>
+      <a class="back-link" href="/">← на главную</a>
+    </header>
+
+    <main id="board">
+      <p class="load-note">Раскладываем пергамент…</p>
+    </main>
+
+    <footer>
+      Архив куро-доски страшных историй • оригинал —
+      <a href="https://recocards.com/board/halloween------------------------------------------159485927147" target="_blank" rel="noopener">recocards.com</a>
+    </footer>
+  </div>
+
+  <script>
+    fetch("data.json")
+      .then(r => r.json())
+      .then(cards => {
+        const board = document.getElementById("board");
+        board.innerHTML = "";
+        for (const c of cards) {
+          const el = document.createElement("article");
+          el.className = "card";
+          const title = document.createElement("div");
+          title.className = "title";
+          title.textContent = c.title || "безымянный рассказчик";
+          const text = document.createElement("div");
+          text.className = "text";
+          text.textContent = c.text || "";
+          el.appendChild(title);
+          el.appendChild(text);
+          for (const src of (c.imgs || [])) {
+            const img = document.createElement("img");
+            img.src = src;
+            img.loading = "lazy";
+            img.alt = "";
+            el.appendChild(img);
+          }
+          if (c.likes) {
+            const likes = document.createElement("div");
+            likes.className = "likes";
+            likes.textContent = "♥ " + c.likes;
+            el.appendChild(likes);
+          }
+          board.appendChild(el);
+        }
+      })
+      .catch(() => {
+        document.getElementById("board").innerHTML =
+          "<p class='load-note'>Не удалось разложить пергамент — попробуйте обновить страницу.</p>";
+      });
+  </script>
+</body>
+</html>
