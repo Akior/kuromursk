@@ -106,8 +106,8 @@
 
     .gbtn::after { content: "▾"; font-size: 0.75em; margin-left: 0.1em; }
     .gbtn:hover { border-color: var(--hover-blue); color: var(--hover-blue); }
-    .group:hover .gbtn, .group:focus-within .gbtn { border-color: var(--hover-blue); color: var(--hover-blue); }
-    .group:hover .gbtn::after, .group:focus-within .gbtn::after { content: "▴"; }
+    .group.open .gbtn, .group:hover .gbtn, .group:focus-within .gbtn { border-color: var(--hover-blue); color: var(--hover-blue); }
+    .group.open .gbtn::after, .group:hover .gbtn::after, .group:focus-within .gbtn::after { content: "▴"; }
 
     ul.submenu {
       list-style: none;
@@ -128,7 +128,8 @@
       padding-top: 0.5rem; /* мостик между кнопкой и списком, чтобы ховер не рвался */
     }
 
-    .group:hover ul.submenu, .group:focus-within ul.submenu {
+    /* список держится, пока класс .open (JS с задержкой на уход курсора) или фокус с клавиатуры */
+    .group.open ul.submenu, .group:focus-within ul.submenu {
       opacity: 1;
       transform: translateX(-50%) translateY(0);
       pointer-events: auto;
@@ -218,6 +219,27 @@
   <footer>kuromursk</footer>
 
   <script>
+    // Меню: курсор ушёл — список держится 5 секунд, потом сворачивается
+    (function () {
+      const CLOSE_DELAY = 5000;
+      document.querySelectorAll(".group").forEach(g => {
+        const btn = g.querySelector(".gbtn");
+        let timer = null;
+        const open = () => { clearTimeout(timer); timer = null; g.classList.add("open"); btn.setAttribute("aria-expanded", "true"); };
+        const close = () => { g.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); };
+        g.addEventListener("mouseenter", open);
+        g.addEventListener("mouseleave", () => {
+          clearTimeout(timer);
+          timer = setTimeout(close, CLOSE_DELAY);
+        });
+        // клик по кнопке — мгновенный тумблер (для касаний): учитывая 5-секундную задержку увода
+        btn.addEventListener("click", () => {
+          if (g.classList.contains("open")) { clearTimeout(timer); timer = null; g.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); }
+          else open();
+        });
+      });
+    })();
+
     // Динамический статус twitch-канала через DecAPI (CORS разрешён, ключи не нужны)
     (function () {
       const el = document.querySelector(".twitch-state");
