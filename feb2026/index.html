@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Февральские поздравляшки 2026 | kuromursk</title>
+  <link rel="stylesheet" href="../board.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="page-head">
+      <h1>Февральские поздравляшки 🍬</h1>
+      <p class="sub">День куро-милашек и куро-вкусняшек — 17 куро-открыток</p>
+      <a class="back-link" href="/">← на главную</a>
+    </header>
+
+    <main id="board">
+      <p class="load-note">Распечатываю куро-милашек…</p>
+    </main>
+
+    <footer>
+      Архив куро-доски «День куро-милашек и куро-вкусняшек» • оригинал —
+      <a href="https://recocards.com/board/thank-you-------------139104780440" target="_blank" rel="noopener">recocards.com</a>
+    </footer>
+  </div>
+
+  <script>
+    fetch("data.json")
+      .then(r => r.json())
+      .then(cards => {
+        const board = document.getElementById("board");
+        board.innerHTML = "";
+        for (const c of cards) {
+          const el = document.createElement("article");
+          el.className = "card";
+          const title = document.createElement("div");
+          title.className = "title";
+          title.textContent = c.title || "анонимный поздравивший";
+          const text = document.createElement("div");
+          text.className = "text";
+          text.textContent = c.text || "";
+          el.appendChild(title);
+          el.appendChild(text);
+          for (const src of (c.imgs || [])) {
+            const img = document.createElement("img");
+            img.src = src;
+            img.loading = "lazy";
+            img.alt = "";
+            el.appendChild(img);
+          }
+          for (const v of (c.vids || [])) {
+            const fr = document.createElement("iframe");
+            fr.src = v;
+            fr.width = "560";
+            fr.height = "315";
+            fr.allow = "accelerometer; clipboard-write; encrypted-media; picture-in-picture";
+            fr.allowFullscreen = true;
+            el.appendChild(fr);
+          }
+          const m = (c.likes || "").match(/\d+/);
+          if (m) {
+            const likes = document.createElement("div");
+            likes.className = "likes";
+            likes.textContent = "♥ " + m[0];
+            el.appendChild(likes);
+          }
+          board.appendChild(el);
+        }
+      })
+      .catch(() => {
+        document.getElementById("board").innerHTML =
+          "<p class='load-note'>Не удалось развернуть милашек — попробуйте обновить страницу.</p>";
+      });
+  </script>
+</body>
+</html>
