@@ -182,9 +182,14 @@
       text-align: center;
     }
 
-    /* телефоны: кнопки в столбик, между ними запас, списки не наезжают */
+    /* телефоны: кнопки в столбик, меню раскрывается В ПОТОКЕ —
+       список раздвигает содержимое, кнопка «О Куромур» уезжает вниз,
+       а не перекрывается */
     @media (max-width: 640px) {
-      .groups { flex-direction: column; align-items: center; gap: 2.2rem; }
+      .groups { flex-direction: column; align-items: center; gap: 2.2rem; min-height: 0; }
+      .group { display: flex; flex-direction: column; align-items: center; gap: 0.9rem; }
+      ul.submenu { display: none; position: static; transform: none; padding-top: 0; min-width: 0; max-width: none; }
+      .group.open ul.submenu, .group:focus-within ul.submenu { display: flex; }
     }
   </style>
 </head>
@@ -240,15 +245,28 @@
           btn.setAttribute("aria-expanded", "true");
         };
         const close = () => { g.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); };
-        g.addEventListener("mouseenter", open);
-        g.addEventListener("mouseleave", () => {
-          clearTimeout(timer);
-          timer = setTimeout(close, CLOSE_DELAY);
-        });
+        // hover-логика только там, где ховер реально есть; на тач-скринах
+        // событие tap шлёт и мышиные события, и click — они конфликтуют
+        if (window.matchMedia("(hover: hover)").matches) {
+          g.addEventListener("mouseenter", open);
+          g.addEventListener("mouseleave", () => {
+            clearTimeout(timer);
+            timer = setTimeout(close, CLOSE_DELAY);
+          });
+        }
         // клик по кнопке — мгновенный тумблер (для касаний): учитывая 5-секундную задержку увода
         btn.addEventListener("click", () => {
           if (g.classList.contains("open")) { clearTimeout(timer); timer = null; g.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); }
           else open();
+        });
+      });
+
+      // тап/клик мимо меню — мгновенно закрываем все открытые списки
+      document.addEventListener("click", (e) => {
+        if (e.target.closest(".group")) return;
+        document.querySelectorAll(".group.open").forEach(g => {
+          g.classList.remove("open");
+          g.querySelector(".gbtn").setAttribute("aria-expanded", "false");
         });
       });
     })();
