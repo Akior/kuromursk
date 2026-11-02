@@ -75,7 +75,7 @@
       display: flex;
       justify-content: center;
       align-items: flex-start;
-      gap: 1rem;
+      gap: 3rem;
       flex-wrap: wrap;
     }
 
@@ -181,6 +181,11 @@
       z-index: 1;
       text-align: center;
     }
+
+    /* телефоны: кнопки в столбик, между ними запас, списки не наезжают */
+    @media (max-width: 640px) {
+      .groups { flex-direction: column; align-items: center; gap: 2.2rem; }
+    }
   </style>
 </head>
 <body>
@@ -225,7 +230,15 @@
       document.querySelectorAll(".group").forEach(g => {
         const btn = g.querySelector(".gbtn");
         let timer = null;
-        const open = () => { clearTimeout(timer); timer = null; g.classList.add("open"); btn.setAttribute("aria-expanded", "true"); };
+        const open = () => {
+          clearTimeout(timer); timer = null;
+          // одновременно открыто только одно меню: соседнее закрывается сразу
+          document.querySelectorAll(".group").forEach(o => {
+            if (o !== g) { o.classList.remove("open"); o.querySelector(".gbtn").setAttribute("aria-expanded", "false"); }
+          });
+          g.classList.add("open");
+          btn.setAttribute("aria-expanded", "true");
+        };
         const close = () => { g.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); };
         g.addEventListener("mouseenter", open);
         g.addEventListener("mouseleave", () => {
