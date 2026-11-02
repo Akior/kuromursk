@@ -81,6 +81,7 @@ const ovSub = $("ov-sub");
 const statusEl = $("status");
 const barFill = $("bar-fill");
 const startBtn = $("btn-start");
+const btnMain = $("btn-main");
 const volHud = $("vol-hud");
 const hintHud = $("hint-hud");
 const crosshair = $("crosshair");
@@ -2295,6 +2296,7 @@ function enter() {
   playMusic();
 
   overlay.classList.add("hidden");
+  btnMain.classList.add("hidden");
   lockPointer();
   // Enter в поле имени тоже входит
 }
@@ -2327,6 +2329,7 @@ document.addEventListener("pointerlockchange", () => {
     ovTitle.textContent = "Пауза";
     ovSub.textContent = "Звук выключен. Нажмите «Продолжить», чтобы вернуться на праздник.";
     startBtn.textContent = "Продолжить";
+    btnMain.classList.remove("hidden");
     overlay.classList.remove("hidden");
   }
 });
@@ -2379,6 +2382,7 @@ window.addEventListener("keydown", (e) => {
     ovTitle.textContent = "Пауза";
     ovSub.textContent = "Звук выключен. Нажмите «Продолжить», чтобы вернуться на праздник.";
     startBtn.textContent = "Продолжить";
+    btnMain.classList.remove("hidden");
     overlay.classList.remove("hidden");
     suspendSound();
     return;
@@ -2521,6 +2525,7 @@ if (touchUI) {
     ovTitle.textContent = "Пауза";
     ovSub.textContent = "Звук выключен. Нажмите «Продолжить», чтобы вернуться на праздник.";
     startBtn.textContent = "Продолжить";
+    btnMain.classList.remove("hidden");
     overlay.classList.remove("hidden");
     suspendSound();
   };
@@ -2569,6 +2574,7 @@ window.addEventListener("resize", () => {
 window.addEventListener("contextmenu", (e) => e.preventDefault());
 
 startBtn.addEventListener("click", enter);
+btnMain.addEventListener("click", () => { window.location.href = "/"; });
 // игра стартует ТОЛЬКО по кнопке «Войти» или Enter в поле имени.
 // Клики по оверлею (включая подпись/панель) никогда не запускают вход.
 usernameInput.addEventListener("keydown", (e) => e.stopPropagation());

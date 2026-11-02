@@ -162,6 +162,15 @@
   }
   #btn-start:hover { background: #f4ce6b; }
   #btn-start:disabled { opacity: .55; cursor: default; }
+  /* в паузе «Продолжить» и «вернуться на основной сайт» стоят в ряд */
+  .btnrow { display: flex; gap: 10px; }
+  .btnrow #btn-start { flex: 1 1 auto; }
+  #btn-main {
+    padding: 12px 16px; font-size: 13.5px; color: #9aa3ad;
+    background: #1c222a; border: 1px solid #2b323c; border-radius: 10px;
+    cursor: pointer; touch-action: manipulation;
+  }
+  #btn-main:hover { color: #e8e8ee; border-color: #ff9ec0; }
   .hidden { display: none !important; }
 </style>
 </head>
@@ -194,7 +203,10 @@
     </div>
     <div id="bar"><div id="bar-fill"></div></div>
     <div id="status">Подготовка…</div>
-    <button id="btn-start">Войти</button>
+    <div class="btnrow">
+      <button id="btn-start">Войти</button>
+      <button id="btn-main" class="hidden">вернуться на основной сайт</button>
+    </div>
     <div id="status"> <br></br><br></br><br></br><br></br>Проект вдохновлён деятельностью @ivan_lolka</div>
   </div>
 </div>
@@ -202,6 +214,6 @@
 <!-- MQTT.js: публичный брокер как релей мультиплеера (замена /mp и PeerJS). Фолбэк на unpkg -->
 <script src="https://cdn.jsdelivr.net/npm/mqtt@5.16.1/dist/mqtt.min.js"
         onerror="this.onerror=null;this.src='https://unpkg.com/mqtt@5.16.1/dist/mqtt.min.js'"></script>
-<script type="module" src="js/app.js?v=mp5"></script>
+<script type="module" src="js/app.js?v=mp6"></script>
 </body>
 </html>
