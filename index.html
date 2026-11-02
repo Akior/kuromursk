@@ -186,6 +186,11 @@
       text-align: center;
     }
 
+    /* версия коммита рядом с подписью */
+    .gitrev { font-size: 0.72rem; letter-spacing: 0.05em; opacity: 0.75; }
+    .gitrev a { color: inherit; text-decoration: none; border-bottom: dotted 1px currentColor; }
+    .gitrev a:hover { color: var(--hover-blue); border-bottom-color: var(--hover-blue); }
+
     /* телефоны: кнопки в столбик, меню раскрывается В ПОТОКЕ —
        список раздвигает содержимое, кнопка «О Куромур» уезжает вниз,
        а не перекрывается */
@@ -235,9 +240,23 @@
     </div>
   </div>
 
-  <footer>kuromursk</footer>
+  <footer>kuromursk <span class="gitrev" id="gitrev"></span></footer>
 
   <script>
+    // версия коммита в футере: последняя SHA ветки main (публичный GitHub API)
+    (function () {
+      const el = document.getElementById("gitrev");
+      fetch("https://api.github.com/repos/Akior/kuromursk/commits/main")
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(j => {
+          const sha = (j.sha || "").slice(0, 7);
+          if (!sha) return;
+          el.innerHTML = " · " +
+            '<a href="https://github.com/Akior/kuromursk/commit/' + sha + '" target="_blank" rel="noopener">' + sha + "</a>";
+        })
+        .catch(() => { /* без сети просто не показываем версию */ });
+    })();
+
     // Меню: курсор ушёл — список держится 2 секунды, потом сворачивается
     (function () {
       const CLOSE_DELAY = 2000;
