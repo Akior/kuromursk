@@ -699,7 +699,11 @@
         for (const tok of toks) {
           const n = noteInfo(tok);
           if (!n.pause) {
-            ((nn, tt) => songTimers.push(setTimeout(() => hitKey(nn.instr, nn.key, nn.note), tt)))(n, t);
+            ((nn, tt) => songTimers.push(setTimeout(() => {
+              curInst = nn.instr;
+              instEl.style.backgroundImage = "url(" + S + INSTR[nn.instr].img + ")";
+              hitKey(nn.instr, nn.key, nn.note);
+            }, tt)))(n, t);
           }
           t += NOTE_MS;
         }
