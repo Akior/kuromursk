@@ -644,6 +644,11 @@
       function hitKey(instr, keyIdx, note) {
         const def = INSTR[instr];
         if (!def) return;
+        // инструмент сменился — меняем спрайт (клавиши/тарелка → обратно бонго)
+        if (curInst !== instr) {
+          curInst = instr;
+          instEl.style.backgroundImage = "url(" + S + def.img + ")";
+        }
         playSound(def.keys[keyIdx % def.keys.length]);
         // левая лапа: ноты 1..5; правая: 0, 6..9 (как в оригинале)
         const left = note >= 1 && note <= 5;
@@ -699,11 +704,7 @@
         for (const tok of toks) {
           const n = noteInfo(tok);
           if (!n.pause) {
-            ((nn, tt) => songTimers.push(setTimeout(() => {
-              curInst = nn.instr;
-              instEl.style.backgroundImage = "url(" + S + INSTR[nn.instr].img + ")";
-              hitKey(nn.instr, nn.key, nn.note);
-            }, tt)))(n, t);
+            ((nn, tt) => songTimers.push(setTimeout(() => hitKey(nn.instr, nn.key, nn.note), tt)))(n, t);
           }
           t += NOTE_MS;
         }
