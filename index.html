@@ -581,13 +581,14 @@
       const TYPE_MS = 55;         // скорость печати
       const HOLD_MS = 3200;       // сколько держится фраза после печати
 
-      let hitUntil = 0;
       let lineIdx = 0, typing = null, holdTimer = null, caretEl = null;
 
-      // хлопок: лапы вниз на 120 мс
+      // хлопок: лапы вниз на 120 мс (setTimeout — rAF в фоне тормозит)
+      let hitTimer = null;
       function hit() {
         cat.classList.add("hit");
-        hitUntil = performance.now() + 120;
+        clearTimeout(hitTimer);
+        hitTimer = setTimeout(() => cat.classList.remove("hit"), 120);
       }
       addEventListener("mousedown", hit);
       addEventListener("keydown", hit);
@@ -623,15 +624,6 @@
           }
         }, TYPE_MS);
       }
-
-      // авто-отбой хлопка
-      (function tick(t) {
-        requestAnimationFrame(tick);
-        if (hitUntil && performance.now() > hitUntil) {
-          cat.classList.remove("hit");
-          hitUntil = 0;
-        }
-      })();
     })();
 
     // версия коммита в футере: последняя SHA ветки main (публичный GitHub API)
