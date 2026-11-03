@@ -54,11 +54,20 @@
       z-index: 1;
     }
 
-    h1 {
-      font-size: clamp(2.2rem, 7vw, 3.6rem);
-      font-weight: 800;
-      letter-spacing: 0.02em;
-      color: var(--text);
+    /* баннер вместо надписи kuromursk */
+    .banner {
+      width: min(100%, 34rem);
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+
+    h1.sr-title {
+      position: absolute;
+      width: 1px; height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
     }
 
     .subtitle {
@@ -68,6 +77,63 @@
       font-size: 1.05rem;
       font-style: italic;
     }
+
+    /* ---------- neko: кошка, бегущая за курсором ---------- */
+    #neko {
+      position: fixed;
+      pointer-events: none;
+      image-rendering: pixelated;
+      z-index: 9999;
+      display: block;
+    }
+
+    /* тумблер neko сбоку экрана */
+    .neko-toggle {
+      position: fixed;
+      right: 0.75rem;
+      bottom: 0.75rem;
+      z-index: 10000;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.45rem 0.8rem;
+      background: #fff;
+      border: solid 1px var(--line);
+      border-radius: 999px;
+      font-family: "Montserrat", sans-serif;
+      font-size: 0.72rem;
+      color: var(--text);
+      cursor: pointer;
+      user-select: none;
+      touch-action: manipulation;
+      box-shadow: 0 4px 14px rgba(66, 53, 52, 0.14);
+      transition: border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .neko-toggle:hover { border-color: var(--hover-blue); color: var(--hover-blue); }
+
+    .neko-toggle .switch {
+      width: 1.7rem; height: 0.95rem;
+      border-radius: 999px;
+      background: #eee2ea;
+      position: relative;
+      flex: none;
+      transition: background 0.2s ease;
+    }
+
+    .neko-toggle .switch::after {
+      content: "";
+      position: absolute;
+      top: 0.12rem; left: 0.12rem;
+      width: 0.7rem; height: 0.7rem;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+      transition: left 0.2s ease;
+    }
+
+    .neko-toggle.on .switch { background: var(--pink); }
+    .neko-toggle.on .switch::after { left: calc(100% - 0.82rem); }
 
     /* ---------- ряд из двух групповых кнопок ---------- */
     .groups {
@@ -209,7 +275,8 @@
 </head>
 <body>
   <div class="inner">
-    <h1>kuromursk</h1>
+    <img class="banner" src="assets/banner.jpg" alt="kuromursk" width="1280" height="449">
+    <h1 class="sr-title">kuromursk</h1>
     <p class="subtitle">Сборник всего, что происходит в КуроМурске</p>
 
     <div class="groups">
@@ -264,7 +331,127 @@
 
   <footer>kuromursk <span class="gitrev" id="gitrev"></span></footer>
 
+  <button class="neko-toggle on" id="neko-toggle" type="button" aria-pressed="true" title="Показать/скрыть кошку">
+    <span class="switch"></span>
+    <span class="label">не́ко</span>
+  </button>
+
   <script>
+    /* ---------- neko: кошка, бегущая за курсором ----------
+     * Спрайт: assets/neko.png — сетка 8×4 тайлов 32×32 (формат oneko, как в crgimenes/neko).
+     * Раскладка кадров взята из main.go оригинала (spriteSheetLayout).
+     */
+    (function () {
+      const TILE = 32;
+      // [col, row] по spriteSheetLayout из github.com/crgimenes/neko
+      const FRAMES = {
+        up1: [1, 2], up2: [1, 3],
+        upright1: [0, 2], upright2: [0, 3],
+        right1: [3, 0], right2: [3, 1],
+        downright1: [5, 1], downright2: [5, 2],
+        down1: [6, 3], down2: [7, 2],
+        downleft1: [5, 3], downleft2: [6, 1],
+        left1: [4, 2], left2: [4, 3],
+        upleft1: [1, 0], upleft2: [1, 1],
+        awake: [7, 3],
+        sleep1: [2, 0], sleep2: [2, 1],
+        yawn1: [3, 2], yawn2: [3, 3],
+        scratch1: [5, 0], scratch2: [6, 0],
+        wash: [7, 0],
+      };
+      // угол (0..360, 0 = вправо) → имя спрайта; секторы по 45°
+      const DIRS = ["right", "downright", "down", "downleft", "left", "upleft", "up", "upright"];
+      const SCALE = 1.5;             // 32 * 1.5 = 48px на экране
+      const SPEED = 7;               // px за кадр
+      const IDLE_TO_SLEEP = 4000;    // мс до засыпания у остановившегося курсора
+
+      const img = new Image();
+      img.src = "assets/neko.png";
+
+      const cat = document.createElement("canvas");
+      cat.id = "neko";
+      const ctx = cat.getContext("2d");
+      cat.width = TILE; cat.height = TILE;
+      cat.style.width = TILE * SCALE + "px";
+      cat.style.height = TILE * SCALE + "px";
+      document.body.appendChild(cat);
+
+      let mx = innerWidth / 2, my = innerHeight / 2;
+      let x = mx - TILE / 2, y = my - TILE / 2;
+      let frameFlip = 0, lastFrame = 0, lastMove = 0;
+      let visible = true;
+
+      // фазы простоя, как в stayIdle() оригинала: бодрствование → чёс → умывание → зевок → сон
+      const idlePhase = () => {
+        const t = performance.now() - lastMove;
+        if (t < 1200) return "awake";
+        if (t < 2400) return frameFlip ? "scratch1" : "scratch2";
+        if (t < 3600) return "wash";
+        if (t < IDLE_TO_SLEEP) return frameFlip ? "yawn1" : "yawn2";
+        return (Math.floor(t / 800) % 2) ? "sleep1" : "sleep2";
+      };
+
+      function draw(name) {
+        const f = FRAMES[name];
+        if (!f) return;
+        ctx.clearRect(0, 0, TILE, TILE);
+        ctx.drawImage(img, f[0] * TILE, f[1] * TILE, TILE, TILE, 0, 0, TILE, TILE);
+      }
+
+      function tick(t) {
+        requestAnimationFrame(tick);
+        if (!visible) return;
+        const dx = mx - TILE / 2 - x, dy = my - TILE / 2 - y;
+        const dist = Math.hypot(dx, dy);
+
+        if (dist < TILE) {
+          // курсор рядом — фазы простоя
+          if (t - lastFrame > 110) { lastFrame = t; frameFlip ^= 1; }
+          draw(idlePhase());
+        } else {
+          // бег к курсору
+          const step = Math.min(SPEED, dist);
+          x += dx / dist * step;
+          y += dy / dist * step;
+          if (t - lastFrame > 90) { lastFrame = t; frameFlip ^= 1; }
+          const ang = (Math.atan2(dy, dx) * 180 / Math.PI + 360) % 360;
+          const dir = DIRS[Math.round(ang / 45) % 8];
+          draw(dir + (frameFlip ? "2" : "1"));
+        }
+
+        cat.style.left = x + "px";
+        cat.style.top = y + "px";
+      }
+
+      addEventListener("mousemove", (e) => { mx = e.clientX; my = e.clientY; lastMove = performance.now(); });
+      addEventListener("touchmove", (e) => {
+        const t = e.touches[0];
+        if (t) { mx = t.clientX; my = t.clientY; lastMove = performance.now(); }
+      }, { passive: true });
+
+      // тумблер: скрыть/показать кошку (запоминается в localStorage)
+      const toggle = document.getElementById("neko-toggle");
+      const KEY = "neko-enabled";
+      try {
+        if (localStorage.getItem(KEY) === "0") {
+          visible = false;
+          cat.style.display = "none";
+          toggle.classList.remove("on");
+          toggle.setAttribute("aria-pressed", "false");
+        }
+      } catch (e) { /* приватный режим — пропускаем */ }
+
+      toggle.addEventListener("click", () => {
+        visible = !visible;
+        cat.style.display = visible ? "block" : "none";
+        toggle.classList.toggle("on", visible);
+        toggle.setAttribute("aria-pressed", String(visible));
+        try { localStorage.setItem(KEY, visible ? "1" : "0"); } catch (e) {}
+      });
+
+      img.onload = () => { requestAnimationFrame(tick); };
+    })();
+
     // версия коммита в футере: последняя SHA ветки main (публичный GitHub API)
     (function () {
       const el = document.getElementById("gitrev");
