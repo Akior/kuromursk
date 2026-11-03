@@ -55,7 +55,7 @@
     }
 
     /* баннер вместо надписи kuromursk */
-    .banner {
+    .banner, .banner-pic {
       width: min(100%, 34rem);
       height: auto;
       display: block;
@@ -275,7 +275,10 @@
 </head>
 <body>
   <div class="inner">
-    <img class="banner" src="assets/banner.jpg" alt="kuromursk" width="1280" height="449">
+    <picture class="banner-pic">
+      <source srcset="assets/banner.webp" type="image/webp">
+      <img class="banner" src="assets/banner8.png" alt="kuromursk" width="1280" height="449">
+    </picture>
     <h1 class="sr-title">kuromursk</h1>
     <p class="subtitle">Сборник всего, что происходит в КуроМурске</p>
 
