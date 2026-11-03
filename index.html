@@ -771,7 +771,7 @@
         if (localStorage.getItem(BKEY) === "0") setBongo(false);
       } catch (e) { /* приватный режим */ }
       bongoToggle.addEventListener("click", () => {
-        setBongo(!wrap.classList.contains("off"));
+        setBongo(!bongoToggle.classList.contains("on")); // состояние по кнопке, не по wrap
       });
 
       /* ----- клавиши: кот хлопает на любые нажатия (кроме полей ввода) ----- */
