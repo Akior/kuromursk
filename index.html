@@ -708,9 +708,9 @@
           ensureCtx();
           if (playingBtn === b) { stopSong(); return; }
           stopSong();
-          playingBtn = b;
-          b.classList.add("playing");
           playSong(+b.dataset.song);
+          playingBtn = b;          // после playSong: он сам зовёт stopSong и снял бы класс
+          b.classList.add("playing");
         });
       });
 
