@@ -503,8 +503,9 @@
       // угол (0..360, 0 = вправо) → имя спрайта; секторы по 45°
       const DIRS = ["right", "downright", "down", "downleft", "left", "upleft", "up", "upright"];
       const SCALE = 1.5;             // 32 * 1.5 = 48px на экране
-      const SPEED = 5.6;             // px за кадр (на 20% медленнее прежних 7)
-      const IDLE_TO_SLEEP = 4000;    // мс до засыпания у остановившегося курсора
+      const SPEED = 336;            // px в СЕКУНДУ (привязка ко времени, а не к кадрам —
+                                    // на 90/120 Гц телефонах rAF чаще, раньше кошка неслась быстрее)
+      const IDLE_TO_SLEEP = 4000;   // мс до засыпания у остановившегося курсора
 
       const img = new Image();
       img.src = "assets/neko.png";
@@ -519,7 +520,7 @@
 
       let mx = innerWidth / 2, my = innerHeight / 2;
       let x = mx - TILE / 2, y = my - TILE / 2;
-      let frameFlip = 0, lastFrame = 0, lastMove = 0;
+      let frameFlip = 0, lastFrame = 0, lastMove = 0, lastT = 0;
       let visible = true;
 
       // фазы простоя, как в stayIdle() оригинала: бодрствование → чёс → умывание → зевок → сон
@@ -541,7 +542,10 @@
 
       function tick(t) {
         requestAnimationFrame(tick);
-        if (!visible) return;
+        if (!visible) { lastT = t; return; }
+        // дельта времени: на любом refresh rate (60/90/120 Гц) скорость одинаковая
+        const dt = Math.min((t - lastT) / 1000, 0.05); // кап 50мс от пропущенных кадров
+        lastT = t;
         const dx = mx - TILE / 2 - x, dy = my - TILE / 2 - y;
         const dist = Math.hypot(dx, dy);
 
@@ -550,8 +554,8 @@
           if (t - lastFrame > 110) { lastFrame = t; frameFlip ^= 1; }
           draw(idlePhase());
         } else {
-          // бег к курсору
-          const step = Math.min(SPEED, dist);
+          // бег к курсору: скорость px/сек × dt
+          const step = Math.min(SPEED * dt, dist);
           x += dx / dist * step;
           y += dy / dist * step;
           if (t - lastFrame > 90) { lastFrame = t; frameFlip ^= 1; }
