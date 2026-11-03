@@ -87,12 +87,19 @@
       display: block;
     }
 
-    /* тумблер neko сбоку экрана */
-    .neko-toggle {
+    /* тумблеры neko/bongo сбоку экрана */
+    .pet-toggles {
       position: fixed;
       right: 0.75rem;
       bottom: 0.75rem;
       z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.45rem;
+    }
+
+    .pet-toggle {
       display: inline-flex;
       align-items: center;
       gap: 0.45rem;
@@ -110,9 +117,9 @@
       transition: border-color 0.15s ease, color 0.15s ease;
     }
 
-    .neko-toggle:hover { border-color: var(--hover-blue); color: var(--hover-blue); }
+    .pet-toggle:hover { border-color: var(--hover-blue); color: var(--hover-blue); }
 
-    .neko-toggle .switch {
+    .pet-toggle .switch {
       width: 1.7rem; height: 0.95rem;
       border-radius: 999px;
       background: #eee2ea;
@@ -121,7 +128,7 @@
       transition: background 0.2s ease;
     }
 
-    .neko-toggle .switch::after {
+    .pet-toggle .switch::after {
       content: "";
       position: absolute;
       top: 0.12rem; left: 0.12rem;
@@ -132,8 +139,8 @@
       transition: left 0.2s ease;
     }
 
-    .neko-toggle.on .switch { background: var(--pink); }
-    .neko-toggle.on .switch::after { left: calc(100% - 0.82rem); }
+    .pet-toggle.on .switch { background: var(--pink); }
+    .pet-toggle.on .switch::after { left: calc(100% - 0.82rem); }
 
     /* ---------- bongo cat: мем-кот (арт @StrayRogue, код Externalizable/bongo.cat, BSD-2) ---------- */
     .bongo-wrap {
@@ -172,40 +179,8 @@
     /* удар: второй кадр спрайта — сдвиг на -800px (как в оригинале) */
     .bongo-cat .l-pawl.down, .bongo-cat .l-pawr.down, .bongo-cat .l-mouth.down { background-position-x: -800px; }
 
-    /* радиальное меню песен: дуга над котом, держится 2с после ухода курсора (JS) */
-    .bongo-menu {
-      position: absolute;
-      right: 0.4rem;
-      bottom: 0.8rem;
-      width: 0; height: 0;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.25s ease;
-      z-index: 6;
-    }
-    .bongo-wrap:hover .bongo-menu, .bongo-wrap.menu-open .bongo-menu, .bongo-wrap.menu-hold .bongo-menu {
-      opacity: 1;
-      pointer-events: auto;
-    }
-    .bongo-menu button {
-      position: absolute;
-      right: 0; bottom: 0;
-      white-space: nowrap;
-      padding: 0.34rem 0.7rem;
-      font-family: "Montserrat", sans-serif;
-      font-size: 0.68rem;
-      font-weight: 500;
-      color: var(--text);
-      background: #fff;
-      border: solid 1px var(--line);
-      border-radius: 999px;
-      cursor: pointer;
-      box-shadow: 0 3px 10px rgba(66, 53, 52, 0.14);
-      transition: border-color 0.15s ease, color 0.15s ease, transform 0.18s ease;
-      touch-action: manipulation;
-    }
-    .bongo-menu button:hover { border-color: var(--hover-blue); color: var(--hover-blue); }
-    .bongo-menu button.playing { border-color: var(--pink); color: var(--pink); }
+    /* скрытый режим: тумблер выключил bongo cat */
+    .bongo-wrap.off { display: none; }
 
     /* реплика кота: пузырь с эффектом печатной машинки */
     .bongo-say {
@@ -229,7 +204,7 @@
       transition: opacity 0.2s ease;
       text-align: left;
     }
-    .bongo-say.show { opacity: 1; }
+    .bongo-say.show { opacity: 1; pointer-events: auto; }
     .bongo-say::after {
       content: "";
       position: absolute;
@@ -249,6 +224,24 @@
       animation: bongo-caret 0.8s steps(1) infinite;
     }
     @keyframes bongo-caret { 50% { opacity: 0; } }
+
+    /* песня-«ноты» в пузыре: кликабельная строка */
+    .bongo-say .song-notes {
+      display: block;
+      margin-top: 0.45rem;
+      padding-top: 0.45rem;
+      border-top: dotted 1px var(--line);
+      font-family: "Montserrat", monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      color: var(--hover-blue);
+      cursor: pointer;
+      pointer-events: auto;
+      transition: color 0.15s ease;
+      word-break: break-all;
+      text-align: left;
+    }
+    .bongo-say .song-notes:hover { color: var(--pink); }
 
     /* ---------- ряд из двух групповых кнопок ---------- */
     .groups {
@@ -398,20 +391,14 @@
     <p class="subtitle">Сборник всего, что происходит в КуроМурске</p>
 
     <!-- bongo cat: арт @StrayRogue / Externalizable/bongo.cat (BSD-2). Хлопает на клики/клавиши,
-         hover — радиальное меню песен, клик по коту — печатает реплику -->
+         клик по коту — реплика (иногда с кликабельными нотами песни) -->
     <div class="bongo-wrap" id="bongo-wrap">
-      <div class="bongo-menu" id="bongo-menu">
-        <button data-song="0" style="transform: translate(-1.2rem, -3.4rem)">Happy Birthday</button>
-        <button data-song="1" style="transform: translate(-7.4rem, -4.6rem)">Ode to Joy</button>
-        <button data-song="2" style="transform: translate(-1.4rem, -6.4rem)">In the End</button>
-        <button data-song="3" style="transform: translate(-7.6rem, -8.2rem)">Come as You Are</button>
-      </div>
-      <div class="bongo-cat" id="bongo" role="img" aria-label="Бонго-кот" title="Клик — мяу, наведите для песен">
-        <div class="layer two l-inst" id="bongo-inst"></div>
+      <div class="bongo-cat" id="bongo" role="img" aria-label="Бонго-кот" title="Клик — мяу">
+        <div class="layer l-inst" id="bongo-inst"></div>
         <div class="layer l-head"></div>
-        <div class="layer two l-mouth" id="bongo-mouth"></div>
-        <div class="layer two l-pawl" id="bongo-pawl"></div>
-        <div class="layer two l-pawr" id="bongo-pawr"></div>
+        <div class="layer l-mouth" id="bongo-mouth"></div>
+        <div class="layer l-pawl" id="bongo-pawl"></div>
+        <div class="layer l-pawr" id="bongo-pawr"></div>
       </div>
       <div class="bongo-say" id="bongo-say" aria-live="polite"></div>
     </div>
@@ -472,10 +459,16 @@
     <br><span style="font-size:0.66rem;opacity:0.7">bongo cat: арт <a href="https://twitter.com/StrayRogue" target="_blank" rel="noopener" style="color:inherit">@StrayRogue</a> · мем <a href="https://twitter.com/DitzyFlama" target="_blank" rel="noopener" style="color:inherit">@DitzyFlama</a> · <a href="https://github.com/Externalizable/bongo.cat" target="_blank" rel="noopener" style="color:inherit">bongo.cat</a> (BSD-2)</span>
   </footer>
 
-  <button class="neko-toggle on" id="neko-toggle" type="button" aria-pressed="true" title="Показать/скрыть кошку">
-    <span class="switch"></span>
-    <span class="label">не́ко</span>
-  </button>
+  <div class="pet-toggles">
+    <button class="pet-toggle on" id="neko-toggle" type="button" aria-pressed="true" title="Показать/скрыть кошку">
+      <span class="switch"></span>
+      <span class="label">не́ко</span>
+    </button>
+    <button class="pet-toggle on" id="bongo-toggle" type="button" aria-pressed="true" title="Показать/скрыть бонго-кота">
+      <span class="switch"></span>
+      <span class="label">бонго</span>
+    </button>
+  </div>
 
   <script>
     /* ---------- neko: кошка, бегущая за курсором ----------
@@ -661,70 +654,17 @@
         strike(mouth, 300);
       }
 
-      /* ----- песни: ноты как в bongo.cat (1-9,0 = клавиши, C = тарелка) -----
-       * темп: 300 мс на ноту (0.3 сек), «1*» = длинная нота (600 мс) */
-      const NOTE_MS = 300;
-      const SONGS = [
-        { name: "Happy Birthday", inst: "keyboard", notes: "1 1 3 1 6 5 . 1 1 3 1 8 6 . 1 1 1* 0* 9 8 6" },
-        { name: "Ode to Joy", inst: "keyboard", notes: "5 5 6 8 8 6 5 3 1 1 3 5 5 3 3 . 5 5 6 8 8 6 5 3 1 1 3 5 3 1 1 . 3 3 5 1 3 5* 6 5* 1 3 5 6 5* 3 1 3 1" },
-        { name: "In the End", inst: "keyboard", notes: "3 0 0 6 5 5 5 5 6 3 . 0 0 6 5 5 5 5 6 3 . C . 0 0 6 5 5 5 5 6 3 . 0 0 6 5 5 5 5 6 3" },
-        { name: "Come as You Are", inst: "keyboard", notes: "1 1 2 3 . 6 3 6 3 3 2 1 8 1 1 8 1 2 3" },
+      /* ----- клики по коту: ЛКМ = бонго, ПКМ = правое бонго, клик = мяу + фраза -----
+       * Реплики: текст ИЛИ «ноты» (цифры/пробелы) — кот сыграет их по клику на строку.
+       */
+      const LINES = [
+        "Мяу!",
+        "3 0 0 6 5 5 5 5 6 3 0 0 6 5 5 5 5 6 3",
+        "Мур-мур-мур…",
+        "1 1 3 1 6 5 1 1 3 1 8 6",
       ];
-      function noteInfo(tok) {
-        if (tok === ".") return { pause: true };
-        if (tok === "C") return { instr: "cymbal", key: 0, note: 9 };
-        let len = 1;
-        if (tok.endsWith("*")) { len = 2; tok = tok.slice(0, -1); }
-        const k = parseInt(tok, 10);
-        if (isNaN(k)) return { pause: true };
-        return { instr: "keyboard", key: k, note: k, len };
-      }
-
-      let songEndTimer = null, playingBtn = null;
-      function stopSong() {
-        clearTimeout(songEndTimer);
-        songEndTimer = null;
-        if (playingBtn) { playingBtn.classList.remove("playing"); playingBtn = null; }
-        // песня кончилась/остановлена — меню можно спрятать (если курсора уже нет)
-        if (!wrap.matches(":hover")) wrap.classList.remove("menu-hold");
-      }
-      function playSong(idx) {
-        stopSong();
-        const song = SONGS[idx];
-        curInst = song.inst;
-        instEl.style.backgroundImage = "url(" + S + INSTR[song.inst].img + ")";
-        const toks = song.notes.split(/\s+/);
-        let t = 0;
-        for (const tok of toks) {
-          const n = noteInfo(tok);
-          if (n.pause) { t += NOTE_MS / 2; continue; }
-          ((nn, tt) => setTimeout(() => hitKey(nn.instr, nn.key, nn.note), tt))(n, t);
-          t += NOTE_MS * (n.len || 1);
-        }
-        songEndTimer = setTimeout(() => {
-          curInst = "bongo";
-          instEl.style.backgroundImage = "url(" + S + INSTR.bongo.img + ")";
-        }, t + 200);
-      }
-
-      /* ----- радиальное меню песен ----- */
-      document.querySelectorAll("#bongo-menu button").forEach(b => {
-        b.addEventListener("click", (e) => {
-          e.stopPropagation();
-          ensureCtx();
-          if (playingBtn === b) { stopSong(); return; }
-          stopSong();
-          playSong(+b.dataset.song);
-          playingBtn = b;          // после playSong: он сам зовёт stopSong и снял бы класс
-          b.classList.add("playing");
-        });
-      });
-
-      /* ----- клики по коту: ЛКМ = бонго, ПКМ = правое бонго, клик = мяу + фраза ----- */
-      // ЗАГЛУШКА: список реплик кота (наполним позже)
-      const LINES = ["Мяу!"];
       const TYPE_MS = 55;
-      const HOLD_MS = 3200;
+      const HOLD_MS = 5000;
       let lineIdx = 0, typing = null, holdTimer = null;
 
       catEl.addEventListener("pointerdown", (e) => {
@@ -736,11 +676,42 @@
       catEl.addEventListener("contextmenu", (e) => e.preventDefault());
       catEl.addEventListener("click", () => { meow(); speak(); });
 
+      /* сыграть строку нот: цифры 0-9, C = тарелка, . = пауза; 300 мс на ноту */
+      const NOTE_MS = 300;
+      function noteInfo(tok) {
+        if (tok === ".") return { pause: true };
+        if (tok === "C") return { instr: "cymbal", key: 0, note: 9 };
+        const k = parseInt(tok, 10);
+        if (isNaN(k)) return { pause: true };
+        return { instr: "keyboard", key: k, note: k };
+      }
+      let songTimers = [];
+      function stopSongNotes() {
+        songTimers.forEach(clearTimeout);
+        songTimers = [];
+        curInst = "bongo";
+        instEl.style.backgroundImage = "url(" + S + INSTR.bongo.img + ")";
+      }
+      function playSongNotes(notesStr) {
+        stopSongNotes();
+        const toks = notesStr.trim().split(/\s+/);
+        let t = 0;
+        for (const tok of toks) {
+          const n = noteInfo(tok);
+          if (!n.pause) {
+            ((nn, tt) => songTimers.push(setTimeout(() => hitKey(nn.instr, nn.key, nn.note), tt)))(n, t);
+          }
+          t += NOTE_MS;
+        }
+        songTimers.push(setTimeout(stopSongNotes, t + 300));
+      }
+
       function speak() {
         const text = LINES[lineIdx % LINES.length];
         lineIdx++;
         clearInterval(typing);
         clearTimeout(holdTimer);
+        stopSongNotes();
         say.textContent = "";
         say.classList.add("show");
         const caret = document.createElement("span");
@@ -755,44 +726,59 @@
           } else {
             clearInterval(typing);
             typing = null;
-            holdTimer = setTimeout(() => say.classList.remove("show"), HOLD_MS);
+            finishSpeech(text);
           }
         }, TYPE_MS);
       }
 
+      // после печати: если реплика — ноты, добавляем кликабельную строку «сыграть»
+      function finishSpeech(text) {
+        const isNotes = /^[0-9C.\s]+$/.test(text.trim()) && /\d/.test(text);
+        if (isNotes) {
+          const a = document.createElement("span");
+          a.className = "song-notes";
+          a.textContent = "▶ сыграть";
+          a.title = "Кот сыграет эти ноты";
+          a.addEventListener("click", (e) => {
+            e.stopPropagation();
+            ensureCtx();
+            playSongNotes(text);
+            a.textContent = "♪ играет…";
+            setTimeout(() => { if (a.isConnected) a.textContent = "▶ сыграть"; }, 4000);
+          });
+          say.appendChild(a);
+          holdTimer = setTimeout(() => say.classList.remove("show"), HOLD_MS + 8000);
+        } else {
+          holdTimer = setTimeout(() => say.classList.remove("show"), HOLD_MS);
+        }
+      }
+
+      /* ----- тумблер bongo cat: вкл/выкл, запоминается в localStorage ----- */
+      const bongoToggle = document.getElementById("bongo-toggle");
+      const BKEY = "bongo-enabled";
+      function setBongo(on) {
+        wrap.classList.toggle("off", !on);
+        bongoToggle.classList.toggle("on", on);
+        bongoToggle.setAttribute("aria-pressed", String(on));
+        if (!on) { stopSongNotes(); say.classList.remove("show"); }
+        try { localStorage.setItem(BKEY, on ? "1" : "0"); } catch (e) {}
+      }
+      try {
+        if (localStorage.getItem(BKEY) === "0") setBongo(false);
+      } catch (e) { /* приватный режим */ }
+      bongoToggle.addEventListener("click", () => {
+        setBongo(!wrap.classList.contains("off"));
+      });
+
       /* ----- клавиши: кот хлопает на любые нажатия (кроме полей ввода) ----- */
       addEventListener("keydown", (e) => {
         if (e.target && e.target.closest && e.target.closest("input, textarea, select")) return;
+        if (wrap.classList.contains("off")) return;
         if (e.repeat) return;
         if (e.code === "Space") { e.preventDefault(); meow(); return; }
         const k = e.key.toUpperCase();
         if (k >= "0" && k <= "9") hitKey("keyboard", parseInt(k, 10), parseInt(k, 10));
         else hitKey("bongo", Math.random() < 0.5 ? 0 : 1, Math.random() < 0.5 ? 0 : 9);
-      });
-
-      /* ----- тач: hover нет — длинное нажатие (0.5 с) открывает меню ----- */
-      let touchTimer = null;
-      catEl.addEventListener("touchstart", () => {
-        touchTimer = setTimeout(() => wrap.classList.add("menu-open"), 500);
-      }, { passive: true });
-      ["touchend", "touchmove"].forEach(ev =>
-        catEl.addEventListener(ev, () => clearTimeout(touchTimer), { passive: true }));
-      document.addEventListener("click", (e) => {
-        if (!wrap.contains(e.target)) wrap.classList.remove("menu-open");
-      });
-
-      /* ----- hover-меню: держим 2с после ухода курсора; пока играет песня — не прячем ----- */
-      let menuHoldTimer = null;
-      wrap.addEventListener("mouseleave", () => {
-        clearTimeout(menuHoldTimer);
-        wrap.classList.add("menu-hold");
-        menuHoldTimer = setTimeout(() => {
-          if (!playingBtn) wrap.classList.remove("menu-hold");
-        }, 2000);
-      });
-      wrap.addEventListener("mouseenter", () => {
-        clearTimeout(menuHoldTimer);
-        wrap.classList.remove("menu-hold");
       });
     })();
 
