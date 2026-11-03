@@ -378,6 +378,13 @@
         display: none; position: static; transform: none; padding-top: 0; min-width: 0; max-width: none;
       }
       .group.open ul.submenu, .group:focus-within ul.submenu { display: flex; }
+      /* бонго-кот на телефоне: меньше и в «кармане» под кнопками,
+         чтобы не перекрывать «О Куромур» */
+      .inner { padding-bottom: 5.6rem; }
+      .bongo-wrap { width: 6.6rem; height: 3.72rem; right: 0.6rem; bottom: 0.5rem; }
+      .bongo-cat { transform: scale(0.132); }
+      /* пузырь на узком экране не должен вылезать за карточку */
+      .bongo-say { right: 0; max-width: 14rem; }
     }
   </style>
 </head>
@@ -496,7 +503,7 @@
       // угол (0..360, 0 = вправо) → имя спрайта; секторы по 45°
       const DIRS = ["right", "downright", "down", "downleft", "left", "upleft", "up", "upright"];
       const SCALE = 1.5;             // 32 * 1.5 = 48px на экране
-      const SPEED = 7;               // px за кадр
+      const SPEED = 5.6;             // px за кадр (на 20% медленнее прежних 7)
       const IDLE_TO_SLEEP = 4000;    // мс до засыпания у остановившегося курсора
 
       const img = new Image();
