@@ -801,6 +801,30 @@ function buildWorld(videos, mazeVideos = []) {
     scene.add(rope);
   }
 
+  /* ---------- ПОРТАЛЫ «телепорт в 2024 / 2025» на задней стенке крыльца ----------
+   * Игрок спавнится в крыльце лицом на север (yaw = 0), за спиной — южная стенка
+   * крыльца (z = Z_HALL + porchLen). Вешаем на неё две кнопки-портала лицом к игроку.
+   */
+  const portalYearDefs = [
+    { label: "Телепорт в 2024", href: "https://clips2.kuromursk.dpdns.org/2024/", accent: "#7fd1b0" },
+    { label: "Телепорт в 2025", href: "https://clips2.kuromursk.dpdns.org/2025/", accent: "#ffb86b" },
+  ];
+  const portalZ = Z_HALL + CFG.porchLen - T / 2 - 0.06;
+  portalYearDefs.forEach((p, i) => {
+    const btn = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.35, 0.42),
+      new THREE.MeshBasicMaterial({
+        map: signTexture([p.label], { w: 1024, h: 320, font: 96, accent: p.accent }),
+      })
+    );
+    btn.position.set(i === 0 ? -0.78 : 0.78, 1.6, portalZ);
+    btn.rotation.y = Math.PI; // лицом на север, к игроку в крыльце
+    btn.userData.portal = p.href;
+    clickables.push(btn);
+    teleportButtons.push(btn); // пульсация в общей анимации
+    scene.add(btn);
+  });
+
   /* ---------- залы ---------- */
   for (const r of ROOMS) {
     const { cx, cz } = r;
@@ -1690,6 +1714,12 @@ function interactAt(ndc) {
     if (obj.userData.teleport) {
       fireConfetti(camera.position.x, camera.position.z, 25); // мини-салют у кнопки
       doMazeTeleport();
+      return;
+    }
+    // портал на другой сайт (2024/2025): переносит в лабиринты clips2
+    if (obj.userData.portal) {
+      fireConfetti(camera.position.x, camera.position.z, 25);
+      window.location.href = obj.userData.portal;
       return;
     }
     const slot = obj.userData.slot;
