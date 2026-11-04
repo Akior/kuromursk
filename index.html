@@ -510,6 +510,24 @@
       const img = new Image();
       img.src = "assets/neko.png";
 
+      /* перекраска: белый корпус → тёмно-серый #909090 (контур/акценты не трогаем).
+       * Спрайт 4-цветный, поэтому после загрузки один раз заменяем белые пиксели. */
+      const GRAY = 144; // #909090
+      const sprite = document.createElement("canvas");
+      const sctx = sprite.getContext("2d", { willReadFrequently: true });
+      function recolor() {
+        sprite.width = img.naturalWidth || img.width;
+        sprite.height = img.naturalHeight || img.height;
+        sctx.drawImage(img, 0, 0);
+        const d = sctx.getImageData(0, 0, sprite.width, sprite.height);
+        for (let i = 0; i < d.data.length; i += 4) {
+          if (d.data[i] === 255 && d.data[i + 1] === 255 && d.data[i + 2] === 255) {
+            d.data[i] = d.data[i + 1] = d.data[i + 2] = GRAY;
+          }
+        }
+        sctx.putImageData(d, 0, 0);
+      }
+
       const cat = document.createElement("canvas");
       cat.id = "neko";
       const ctx = cat.getContext("2d");
@@ -537,7 +555,7 @@
         const f = FRAMES[name];
         if (!f) return;
         ctx.clearRect(0, 0, TILE, TILE);
-        ctx.drawImage(img, f[0] * TILE, f[1] * TILE, TILE, TILE, 0, 0, TILE, TILE);
+        ctx.drawImage(sprite, f[0] * TILE, f[1] * TILE, TILE, TILE, 0, 0, TILE, TILE);
       }
 
       function tick(t) {
@@ -594,7 +612,7 @@
         try { localStorage.setItem(KEY, visible ? "1" : "0"); } catch (e) {}
       });
 
-      img.onload = () => { requestAnimationFrame(tick); };
+      img.onload = () => { recolor(); requestAnimationFrame(tick); };
     })();
 
     /* ---------- bongo cat: мем-кот (арт @StrayRogue, логика по мотивам Externalizable/bongo.cat, BSD-2) ---------- */
