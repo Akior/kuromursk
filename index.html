@@ -3,402 +3,315 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>kuromursk</title>
+  <title>kuromursk — сборник всего, что происходит в КуроМурске</title>
+  <meta name="description" content="КуроМурск: клипы, страшные истории, поздравления и стримы КуроМур по годам.">
+  <meta name="theme-color" content="#F2DEEA" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#251a33" media="(prefers-color-scheme: dark)">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,500;0,700;0,800;1,300&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #F2DEEA;
-      --paw: #F8F1F1;
-      --panel: #FFFFFF;
-      --text: #423534;
-      --muted: #757575;
-      --line: #D1D1D1;
-      --hover-blue: #54ABD1;
-      --pink: #E08BBF;
-      /* палитра пунктов меню (так как на carrd-странице) */
-      --c-clips: #8388EB;       /* лазурный фиолет */
-      --c-scary: #F57D07;       /* тыквенный оранж */
-      --c-words: #FF6363;       /* алый */
-      --c-anniv: #A464A1;       /* пурпурно-розовый */
-      --c-info:  #368CC2;       /* голубой */
-    }
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background-color: var(--bg);
-      /* фирменная плитка кошачьих лапок: чистый безшовный паттерн */
-      background-image: url("data:image/svg+xml;charset=utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22220%22%20height%3D%22220%22%20viewBox%3D%220%200%20220%20220%22%3E%3Cg%20fill%3D%22%23F8F1F1%22%20transform%3D%22translate(110%2C110)%20rotate(24)%22%3E%3Cellipse%20cx%3D%220%22%20cy%3D%2218%22%20rx%3D%2238%22%20ry%3D%2231%22%2F%3E%3Cellipse%20cx%3D%22-44%22%20cy%3D%22-26%22%20rx%3D%2215%22%20ry%3D%2219%22%20transform%3D%22rotate(-28%20-44%20-26)%22%2F%3E%3Cellipse%20cx%3D%22-16%22%20cy%3D%22-45%22%20rx%3D%2214%22%20ry%3D%2219%22%20transform%3D%22rotate(-10%20-16%20-45)%22%2F%3E%3Cellipse%20cx%3D%2216%22%20cy%3D%22-45%22%20rx%3D%2214%22%20ry%3D%2219%22%20transform%3D%22rotate(10%2016%20-45)%22%2F%3E%3Cellipse%20cx%3D%2244%22%20cy%3D%22-26%22%20rx%3D%2214.5%22%20ry%3D%2218.5%22%20transform%3D%22rotate(28%2044%20-26)%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
-      background-size: 220px;
-      color: var(--text);
-      font-family: "Montserrat", sans-serif;
-      padding: 2rem 1rem;
-    }
-
-    .inner {
-      background: var(--panel);
-      border-radius: 0.5rem;
-      box-shadow: 0 18px 50px rgba(66, 53, 52, 0.12);
-      max-width: 42rem;
-      width: 100%;
-      padding: 2.875rem 2.25rem;
-      text-align: center;
-      position: relative;
-      z-index: 1;
-    }
-
-    /* баннер вместо надписи kuromursk */
-    .banner, .banner-pic {
-      width: min(100%, 34rem);
-      height: auto;
-      display: block;
-      margin: 0 auto;
-    }
-
-    h1.sr-title {
-      position: absolute;
-      width: 1px; height: 1px;
-      overflow: hidden;
-      clip: rect(0 0 0 0);
-      white-space: nowrap;
-    }
-
-    .subtitle {
-      margin-top: 0.6rem;
-      color: var(--pink);
-      font-weight: 300;
-      font-size: 1.05rem;
-      font-style: italic;
-    }
-
-    /* ---------- neko: кошка, бегущая за курсором ---------- */
-    #neko {
-      position: fixed;
-      pointer-events: none;
-      image-rendering: pixelated;
-      z-index: 9999;
-      display: block;
-    }
-
-    /* тумблеры neko/bongo сбоку экрана */
-    .pet-toggles {
-      position: fixed;
-      right: 0.75rem;
-      bottom: 0.75rem;
-      z-index: 10000;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 0.45rem;
-    }
-
-    .pet-toggle {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.45rem;
-      padding: 0.45rem 0.8rem;
-      background: #fff;
-      border: solid 1px var(--line);
-      border-radius: 999px;
-      font-family: "Montserrat", sans-serif;
-      font-size: 0.72rem;
-      color: var(--text);
-      cursor: pointer;
-      user-select: none;
-      touch-action: manipulation;
-      box-shadow: 0 4px 14px rgba(66, 53, 52, 0.14);
-      transition: border-color 0.15s ease, color 0.15s ease;
-    }
-
-    .pet-toggle:hover { border-color: var(--hover-blue); color: var(--hover-blue); }
-
-    .pet-toggle .switch {
-      width: 1.7rem; height: 0.95rem;
-      border-radius: 999px;
-      background: #eee2ea;
-      position: relative;
-      flex: none;
-      transition: background 0.2s ease;
-    }
-
-    .pet-toggle .switch::after {
-      content: "";
-      position: absolute;
-      top: 0.12rem; left: 0.12rem;
-      width: 0.7rem; height: 0.7rem;
-      border-radius: 50%;
-      background: #fff;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.25);
-      transition: left 0.2s ease;
-    }
-
-    .pet-toggle.on .switch { background: var(--pink); }
-    .pet-toggle.on .switch::after { left: calc(100% - 0.82rem); }
-
-    /* ---------- bongo cat: мем-кот (арт @StrayRogue, код Externalizable/bongo.cat, BSD-2) ---------- */
-    .bongo-wrap {
-      position: absolute;
-      right: 0.8rem;
-      bottom: 0.35rem;
-      width: 8.5rem;
-      height: 4.78rem;
-      z-index: 5;
-    }
-
-    /* логический холст 800×450 (как в оригинале), уменьшаем scale'ом */
-    .bongo-cat {
-      position: absolute;
-      left: 0; top: 0;
-      width: 800px;
-      height: 450px;
-      transform: scale(0.17);
-      transform-origin: 0 0;
-      cursor: pointer;
-      touch-action: manipulation;
-    }
-
-    /* слои кота: спрайты в натуральном размере (1600×900 = 2 кадра по X,
-       нижняя половина 450..900 = тёмная тема, нам не нужна — обрезается холстом) */
-    .bongo-cat .layer {
-      position: absolute;
-      inset: 0;
-      background-repeat: no-repeat;
-    }
-    .bongo-cat .l-inst { z-index: 1; }
-    .bongo-cat .l-head { z-index: 2; background-image: url("assets/bongo/img/cat.png"); }
-    .bongo-cat .l-mouth { z-index: 3; background-image: url("assets/bongo/img/mouth.png"); }
-    .bongo-cat .l-pawl { z-index: 4; background-image: url("assets/bongo/img/paw-left.png"); }
-    .bongo-cat .l-pawr { z-index: 4; background-image: url("assets/bongo/img/paw-right.png"); }
-    /* удар: второй кадр спрайта — сдвиг на -800px (как в оригинале) */
-    .bongo-cat .l-pawl.down, .bongo-cat .l-pawr.down, .bongo-cat .l-mouth.down { background-position-x: -800px; }
-
-    /* скрытый режим: тумблер выключил bongo cat */
-    .bongo-wrap.off { display: none; }
-
-    /* реплика кота: пузырь с эффектом печатной машинки */
-    .bongo-say {
-      position: absolute;
-      right: 0.2rem;
-      bottom: 100%;
-      margin-bottom: 0.4rem;
-      max-width: 16rem;
-      background: #fff;
-      border: solid 1px var(--line);
-      border-radius: 0.6rem;
-      padding: 0.55rem 0.85rem;
-      font-size: 0.78rem;
-      font-weight: 500;
-      color: var(--text);
-      line-height: 1.45;
-      box-shadow: 0 4px 14px rgba(66, 53, 52, 0.14);
-      z-index: 6;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease;
-      text-align: left;
-    }
-    .bongo-say.show { opacity: 1; pointer-events: auto; }
-    .bongo-say::after {
-      content: "";
-      position: absolute;
-      bottom: -0.5rem;
-      right: 1.4rem;
-      width: 0.75rem; height: 0.75rem;
-      background: #fff;
-      border-right: solid 1px var(--line);
-      border-bottom: solid 1px var(--line);
-      transform: rotate(45deg);
-    }
-    /* мигающий курсор печати */
-    .bongo-say .caret {
-      display: inline-block;
-      width: 0.45em;
-      color: var(--pink);
-      animation: bongo-caret 0.8s steps(1) infinite;
-    }
-    @keyframes bongo-caret { 50% { opacity: 0; } }
-
-    /* песня-«ноты» в пузыре: кликабельная строка */
-    .bongo-say .song-notes {
-      display: block;
-      margin-top: 0.45rem;
-      padding-top: 0.45rem;
-      border-top: dotted 1px var(--line);
-      font-family: "Montserrat", monospace;
-      font-size: 0.72rem;
-      letter-spacing: 0.06em;
-      color: var(--hover-blue);
-      cursor: pointer;
-      pointer-events: auto;
-      transition: color 0.15s ease;
-      word-break: break-all;
-      text-align: left;
-    }
-    .bongo-say .song-notes:hover { color: var(--pink); }
-
-    /* ---------- ряд из двух групповых кнопок ---------- */
-    .groups {
-      margin-top: 2.2rem;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      gap: 2rem;
-      flex-wrap: wrap;
-    }
-
-    .group { position: relative; }
-
-    /* резервируем место для раскрытого списка внутри карточки (самый длинный — 2026, 6 пунктов) */
-    .groups { min-height: 16.5rem; }
-
-    /* кнопки в стиле carrd: капсулы, тонкая рамка, uppercase, hover → голубой */
-    .gbtn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.72rem 1.5rem;
-      font-family: "Montserrat", sans-serif;
-      font-size: 0.85rem;
-      font-weight: 500;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--text);
-      background: #fff;
-      border: solid 1px var(--line);
-      border-radius: 0.375rem;
-      text-decoration: none;
-      cursor: pointer;
-      /* телефон: второй тап = свернуть меню, а не zoom */
-      touch-action: manipulation;
-      transition: border-color 0.15s ease, color 0.15s ease;
-    }
-
-    .gbtn::after { content: "▾"; font-size: 0.75em; margin-left: 0.1em; }
-    .gbtn:hover { border-color: var(--hover-blue); color: var(--hover-blue); }
-    .group.open .gbtn, .group:hover .gbtn, .group:focus-within .gbtn { border-color: var(--hover-blue); color: var(--hover-blue); }
-    .group.open .gbtn::after, .group:hover .gbtn::after, .group:focus-within .gbtn::after { content: "▴"; }
-
-    ul.submenu {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 0.4rem;
-      position: absolute;
-      top: 100%;
-      left: 50%;
-      transform: translateX(-50%) translateY(-6px);
-      z-index: 10;
-      min-width: 100%;
-      width: max-content;
-      max-width: 22rem;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.22s ease, transform 0.22s ease;
-      padding-top: 0.5rem; /* мостик между кнопкой и списком, чтобы ховер не рвался */
-    }
-
-    /* список держится, пока класс .open (JS с задержкой на уход курсора) или фокус с клавиатуры */
-    .group.open ul.submenu, .group:focus-within ul.submenu {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-      pointer-events: auto;
-    }
-
-    .submenu a {
-      display: block;
-      padding: 0.62rem 1.25rem;
-      font-size: 0.85rem;
-      font-weight: 500;
-      letter-spacing: 0.02em;
-      text-decoration: none;
-      color: var(--text);
-      background: #fff;
-      border: solid 1px var(--line);
-      border-radius: 0.375rem;
-      white-space: nowrap;
-      overflow: visible;
-      /* пункты меню — тоже без двойнотапного zoom-перехвата */
-      touch-action: manipulation;
-      transition: border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
-    }
-
-    /* цветовой отклик каждого пункта */
-    .submenu a.i-clips:hover    { border-color: var(--c-clips);  color: var(--c-clips); }
-    .submenu a.i-scary:hover    { border-color: var(--c-scary);  color: var(--c-scary); }
-    .submenu a.i-words:hover    { border-color: var(--c-words);  color: var(--c-words); }
-    .submenu a.i-anniv:hover    { border-color: var(--c-anniv);  color: var(--c-anniv); }
-    .submenu a.i-info:hover     { border-color: var(--c-info);   color: var(--c-info); }
-    .submenu a.i-twitch:hover   { border-color: var(--hover-blue); color: var(--hover-blue); }
-
-    /* динамическая подпись статуса стрима */
-    .twitch-state {
-      display: block;
-      margin-top: 0.25rem;
-      text-transform: none;
-      letter-spacing: 0;
-      font-size: 0.7rem;
-      font-weight: 400;
-      color: var(--muted);
-    }
-
-    .twitch-state .dot { font-size: 0.65rem; }
-
-    footer {
-      margin-top: 2rem;
-      color: var(--muted);
-      font-size: 0.8rem;
-      font-weight: 300;
-      position: relative;
-      z-index: 1;
-      text-align: center;
-    }
-
-    /* версия коммита рядом с подписью */
-    .gitrev { font-size: 0.72rem; letter-spacing: 0.05em; opacity: 0.75; }
-    .gitrev a { color: inherit; text-decoration: none; border-bottom: dotted 1px currentColor; }
-    .gitrev a:hover { color: var(--hover-blue); border-bottom-color: var(--hover-blue); }
-
-    /* телефоны: кнопки в столбик, меню раскрывается В ПОТОКЕ —
-       список раздвигает содержимое, кнопка «О Куромур» уезжает вниз,
-       а не перекрывается */
-    @media (max-width: 640px) {
-      .groups { flex-direction: column; align-items: center; gap: 2.2rem; min-height: 0; }
-      .group { display: flex; flex-direction: column; align-items: center; gap: 0.9rem; }
-      /* селектор открытого меню указан явно: базовое правило
-         .group.open ul.submenu { transform: translateX(-50%) } сильнее по специфичности,
-         чем голый ul.submenu — без этого открытый список уезжает влево */
-      ul.submenu, .group.open ul.submenu, .group:focus-within ul.submenu {
-        display: none; position: static; transform: none; padding-top: 0; min-width: 0; max-width: none;
-      }
-      .group.open ul.submenu, .group:focus-within ul.submenu { display: flex; }
-      /* бонго-кот на телефоне: меньше и в «кармане» под кнопками,
-         чтобы не перекрывать «О Куромур» */
-      .inner { padding-bottom: 5.6rem; }
-      .bongo-wrap { width: 6.6rem; height: 3.72rem; right: 0.6rem; bottom: 0.5rem; }
-      .bongo-cat { transform: scale(0.132); }
-      /* пузырь на узком экране не должен вылезать за карточку */
-      .bongo-say { right: 0; max-width: 14rem; }
-    }
-  </style>
+  <link rel="stylesheet" href="style.css?v=6">
 </head>
-<body>
-  <div class="inner">
-    <picture class="banner-pic">
-      <source srcset="assets/banner.webp" type="image/webp">
-      <img class="banner" src="assets/banner8.png" alt="kuromursk" width="1280" height="449">
-    </picture>
-    <h1 class="sr-title">kuromursk</h1>
-    <p class="subtitle">Сборник всего, что происходит в КуроМурске</p>
 
-    <!-- bongo cat: арт @StrayRogue / Externalizable/bongo.cat (BSD-2). Хлопает на клики/клавиши,
-         клик по коту — реплика (иногда с кликабельными нотами песни) -->
+<body data-theme="auto">
+
+  <!-- ======================================================================
+       Служебные переключатели (чистый CSS, без JS):
+       • табы разделов      #tab-2024 … #tab-kuro
+       • режим «всё сразу»  #f-tab / #f-all
+       • тумблеры питомцев  #pet-neko / #pet-bongo  (дублируют старые id-кнопки)
+       • размер питомцев    #neko-s/m/l, #bongo-s/m/l, #size-s/m/l
+       • тема               #th-light / #th-dark
+       Все они обёрнуты в fixed-контейнер: клик по label фокусирует input,
+       а fixed-элемент не скроллит документ — страница не прыгает к началу.
+       =================================================================== -->
+  <div class="sr-controls">
+    <input class="sr-input" type="radio" name="tab" id="tab-2024">
+    <input class="sr-input" type="radio" name="tab" id="tab-2025">
+    <input class="sr-input" type="radio" name="tab" id="tab-2026" checked>
+    <input class="sr-input" type="radio" name="tab" id="tab-kuro">
+
+    <input class="sr-input" type="radio" name="filt" id="f-tab" checked>
+    <input class="sr-input" type="radio" name="filt" id="f-all">
+
+    <input class="sr-input" type="checkbox" id="pet-neko" checked>
+    <input class="sr-input" type="checkbox" id="pet-bongo" checked>
+
+    <input class="sr-input" type="radio" name="theme" id="th-light">
+    <input class="sr-input" type="radio" name="theme" id="th-dark">
+
+    <!-- режим дока: компактный (S/M/L в одну строку) или развёрнутый (две группы размеров) -->
+    <input class="sr-input" type="radio" name="docksize" id="size-s">
+    <input class="sr-input" type="radio" name="docksize" id="size-m" checked>
+    <input class="sr-input" type="radio" name="docksize" id="size-l">
+    <input class="sr-input" type="radio" name="nekosize"  id="neko-s">
+    <input class="sr-input" type="radio" name="nekosize"  id="neko-m" checked>
+    <input class="sr-input" type="radio" name="nekosize"  id="neko-l">
+    <input class="sr-input" type="radio" name="bongosize" id="bongo-s">
+    <input class="sr-input" type="radio" name="bongosize" id="bongo-m" checked>
+    <input class="sr-input" type="radio" name="bongosize" id="bongo-l">
+  </div>
+
+  <!-- декор: мягкое свечение + блёстки -->
+  <div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
+  <div class="sparkles" aria-hidden="true">
+    <i style="--x:8%;  --y:16%; --s:12px; --t:6.5s; --dl:0s"></i>
+    <i style="--x:88%; --y:11%; --s:9px;  --t:8s;   --dl:-2s"></i>
+    <i style="--x:74%; --y:70%; --s:14px; --t:7.2s; --dl:-4s"></i>
+    <i style="--x:16%; --y:76%; --s:8px;  --t:9s;   --dl:-1s"></i>
+    <i style="--x:52%; --y:6%;  --s:7px;  --t:6s;   --dl:-3s"></i>
+    <i style="--x:34%; --y:90%; --s:10px; --t:8.6s; --dl:-5s"></i>
+  </div>
+
+  <!-- ============================== КАРТОЧКА ============================== -->
+  <main class="card-main">
+
+    <!-- ------------------------------- HERO ------------------------------ -->
+    <header class="hero">
+      <div class="banner-frame">
+        <picture>
+          <source srcset="assets/banner.webp" type="image/webp">
+          <img class="banner" src="assets/banner8.png" alt="kuromursk" width="1280" height="449">
+        </picture>
+      </div>
+      <h1 class="sr-title">kuromursk</h1>
+      <p class="subtitle">Сборник всего, что происходит в <em>КуроМурске</em> 🐾</p>
+
+      <div class="hero-badges">
+        <a class="chip" href="https://kuromurinfo.carrd.co/" target="_blank" rel="noopener">
+          <span aria-hidden="true">✉️</span> Контакты
+        </a>
+        <a class="chip" href="#nav" data-scroll>
+          <span aria-hidden="true">📚</span> Архив по годам
+        </a>
+      </div>
+    </header>
+
+    <!-- ------------------------- ТАБЫ + ПАНЕЛИ --------------------------- -->
+    <nav class="nav" id="nav" aria-label="Разделы КуроМурска">
+      <legend class="nav-legend">выбери год</legend>
+
+      <div class="tabs" role="tablist" aria-label="Разделы">
+        <span class="tab-ind" aria-hidden="true"></span>
+
+        <label class="tab-label" for="tab-2024" id="tl-2024" role="tab" aria-controls="p-2024" tabindex="0">
+          <span class="yr">2024</span><span class="cnt">2</span>
+        </label>
+        <label class="tab-label" for="tab-2025" id="tl-2025" role="tab" aria-controls="p-2025" tabindex="0">
+          <span class="yr">2025</span><span class="cnt">4</span>
+        </label>
+        <label class="tab-label" for="tab-2026" id="tl-2026" role="tab" aria-controls="p-2026" tabindex="0">
+          <span class="yr">2026</span><span class="cnt">6</span>
+        </label>
+        <label class="tab-label" for="tab-kuro" id="tl-kuro" role="tab" aria-controls="p-kuro" tabindex="0">
+          <span class="tab-col">
+            <span class="yr">О&nbsp;КуроМур</span>
+            <span class="sub">Наш лидер и мэр</span>
+          </span>
+        </label>
+      </div>
+
+      <div class="panels">
+
+        <!-- ------------------------------ 2024 ---------------------------- -->
+        <section class="panel" id="p-2024" role="tabpanel" aria-labelledby="tl-2024">
+          <p class="panel-note">2024 · с чего всё началось</p>
+          <ul class="cards">
+            <li>
+              <a class="card ic-clips" href="https://clips2.kuromursk.dpdns.org/2024/" data-ext="1">
+                <span class="ico" aria-hidden="true"></span>
+                <span class="txt">
+                  <span class="t">Клипы</span>
+                  <span class="d">нарезки мурчащих моментов года</span>
+                </span>
+                <span class="go" aria-hidden="true"></span>
+              </a>
+            </li>
+            <li>
+              <a class="card ic-words" href="/scary2024/">
+                <span class="ico" aria-hidden="true"></span>
+                <span class="txt">
+                  <span class="t">Страшные истории</span>
+                  <span class="d">страшилки КуроМурска на ночь</span>
+                </span>
+                <span class="go" aria-hidden="true"></span>
+              </a>
+            </li>
+          </ul>
+        </section>
+
+        <!-- ------------------------------ 2025 ---------------------------- -->
+        <section class="panel" id="p-2025" role="tabpanel" aria-labelledby="tl-2025">
+          <p class="panel-note">2025 · мурчим дальше</p>
+          <ul class="cards">
+            <li>
+              <a class="card ic-clips" href="https://clips2.kuromursk.dpdns.org/2025/" data-ext="1">
+                <span class="ico" aria-hidden="true"></span>
+                <span class="txt">
+                  <span class="t">Клипы</span>
+                  <span class="d">лучшие моменты стримов</span>
+                </span>
+                <span class="go" aria-hidden="true"></span>
+              </a>
+            </li>
+            <li>
+              <a class="card ic-words" href="/scary2025/">
+                <span class="ico" aria-hidden="true"></span>
+                <span class="txt">
+                  <span class="t">Страшные истории</span>
+                  <span class="d">второй сезон кошмариков</span>
+                </span>
+                <span class="go" aria-hidden="true"></span>
+              </a>
+            </li>
+            <li>
+              <a class="card ic-bday" href="/happy2025/">
+                <span class="ico" aria-hidden="true"></span>
+                <span class="txt">
+                  <span class="t">Поздравления КуроМур с ДР</span>
+                  <span class="d">открытки и тёплые слова</span>
+                </span>
+                <span class="go" aria-hidden="true"></span>
+              </a>
+            </li>
+            <li>
+              <a class="card ic-feb" href="/feb2025/">
+                <span class="ico" aria-hidden="true"></span>
+                <span class="txt">
+                  <span class="t">Февральские поздравляшки</span>
+                  <span class="d">сердечки и цветочки</span>
+                </span>
+                <span class="go" aria-hidden="true"></span>
+              </a>
+            </li>
+          </ul>
+        </section>
+
+        <!-- ------------------------------ 2026 ---------------------------- -->
+        <section class="panel" id="p-2026" role="tabpanel" aria-labelledby="tl-2026">
+          <p class="panel-note">2026 · самое свежее</p>
+          <ul class="cards">
+            <li>
+              <a class="card ic-clips" href="/clips/">
+                <span class="ico" aria-hidden="true"></span>
+                <span class="txt">
+                  <span class="t">Клипы</span>
+                  <span class="d">свежие нарезки и лабиринты</span>
+                </span>
+                <span class="go" aria-hidden="true"></span>
+              </a>
+            </li>
+            <li>
+              <a class="card ic-scary" href="/halloween/">
+                <span class="ico" aria-hidden="true"></span>
+                <span class="txt">
+                  <span class="t">Ужастик от Рандомявзеров</span>
+                  <span class="d">интерактивная хеллоуин-страшилка</span>
+                </span>
+                <span class="tag">хэллоуин</span>
+                <span class="go" aria-hidden="true"></span>
+              </a>
+            </li>
+            <li>
+              <a class="card ic-words" href="/halloweenwords/">
+                <span class="ico" aria-hidden="true"></span>
+                <span class="txt">
+                  <span class="t">Страшные истории</span>
+                  <span class="d">13 историй от зрителей</span>
+                </span>
+                <span class="go" aria-hidden="true"></span>
+              </a>
+            </li>
+            <li>
+              <a class="card ic-anniv" href="/anniversary/">
+                <span class="ico" aria-hidden="true"></span>
+                <span class="txt">
+                  <span class="t">Поздравления на годовщину</span>
+                  <span class="d">3 куро-года: 27 открыток</span>
+                </span>
+                <span class="tag">3 года</span>
+                <span class="go" aria-hidden="true"></span>
+              </a>
+            </li>
+            <li>
+              <a class="card ic-bday" href="/happy2026/">
+                <span class="ico" aria-hidden="true"></span>
+                <span class="txt">
+                  <span class="t">Поздравления КуроМур с ДР</span>
+                  <span class="d">доска поздравлений</span>
+                </span>
+                <span class="go" aria-hidden="true"></span>
+              </a>
+            </li>
+            <li>
+              <a class="card ic-feb" href="/feb2026/">
+                <span class="ico" aria-hidden="true"></span>
+                <span class="txt">
+                  <span class="t">Февральские поздравляшки</span>
+                  <span class="d">валентинки КуроМурска</span>
+                </span>
+                <span class="go" aria-hidden="true"></span>
+              </a>
+            </li>
+          </ul>
+        </section>
+
+        <!-- --------------------------- О КУРОМУР -------------------------- -->
+        <section class="panel" id="p-kuro" role="tabpanel" aria-labelledby="tl-kuro">
+          <p class="panel-note">о КуроМур · где её найти</p>
+          <ul class="cards">
+            <li>
+              <a class="card ic-info" href="https://kuromurinfo.carrd.co/" target="_blank" rel="noopener" data-ext="1">
+                <span class="ico" aria-hidden="true"></span>
+                <span class="txt">
+                  <span class="t">Контакты</span>
+                  <span class="d">всё о КуроМур на одной странице</span>
+                </span>
+                <span class="go" aria-hidden="true"></span>
+              </a>
+            </li>
+            <li>
+              <a class="card ic-live" href="https://www.twitch.tv/kuromur" target="_blank" rel="noopener" data-ext="1">
+                <span class="ico" aria-hidden="true"></span>
+                <span class="txt">
+                  <span class="t">Стримы КуроМур</span>
+                  <span class="d">
+                    <span class="twitch-state" data-channel="kuromur">
+                      <span class="dot">⚪</span><span class="lbl">проверяем статус…</span>
+                    </span>
+                  </span>
+                </span>
+                <span class="go" aria-hidden="true"></span>
+              </a>
+            </li>
+            <li>
+              <a class="card ic-discord" href="https://discord.gg/UkcyQpXYGZ" target="_blank" rel="noopener" data-ext="1">
+                <span class="ico" aria-hidden="true"></span>
+                <span class="txt">
+                  <span class="t">Дискорд Лапок</span>
+                  <span class="d">наш уютный сервер КуроМурска</span>
+                </span>
+                <span class="go" aria-hidden="true"></span>
+              </a>
+            </li>
+          </ul>
+        </section>
+
+      </div><!-- /.panels -->
+    </nav>
+
+    <!-- --------------------- РЕЖИМ «ПО ГОДАМ / ВСЁ» ---------------------- -->
+    <div class="filterbar">
+      <label class="filter-label" for="f-tab" tabindex="0">🗂 по годам</label>
+      <label class="filter-label" for="f-all" tabindex="0">✨ показать всё</label>
+    </div>
+
+    <!-- ----------------------------- БОНГО-КОТ ----------------------------
+         арт @StrayRogue / Externalizable/bongo.cat (BSD-2).
+         Хлопает на клики и клавиши, клик по коту — реплика (иногда с нотами).
+         Масштаб меняется радио-кнопками в доке (--bongo-scale в style.css) -->
     <div class="bongo-wrap" id="bongo-wrap">
       <div class="bongo-cat" id="bongo" role="img" aria-label="Бонго-кот" title="Клик — мяу">
         <div class="layer l-inst" id="bongo-inst"></div>
@@ -410,81 +323,80 @@
       <div class="bongo-say" id="bongo-say" aria-live="polite"></div>
     </div>
 
+  </main>
 
-    <div class="groups">
-      <!-- группа 1: 2024 — самое старое -->
-      <div class="group">
-        <button class="gbtn" type="button" aria-haspopup="true" aria-expanded="false">2024</button>
-        <ul class="submenu">
-          <li><a class="i-clips" href="https://clips2.kuromursk.dpdns.org/2024/">Клипы</a></li>
-          <li><a class="i-words" href="/scary2024/">Страшные истории</a></li>
-        </ul>
+  <!-- =============================== ФУТЕР ================================ -->
+  <footer class="foot">
+    <span class="foot-made">
+      <b>kuromursk</b> <span class="heart" aria-hidden="true">💜</span>
+      <span class="gitrev" id="gitrev"></span>
+    </span>
+    <span class="credits">
+      bongo cat: арт <a href="https://twitter.com/StrayRogue" target="_blank" rel="noopener">@StrayRogue</a> ·
+      мем <a href="https://twitter.com/DitzyFlama" target="_blank" rel="noopener">@DitzyFlama</a> ·
+      <a href="https://github.com/Externalizable/bongo.cat" target="_blank" rel="noopener">bongo.cat</a> (BSD-2)
+    </span>
+  </footer>
+
+  <!-- ============================ ДОК-ПАНЕЛЬ ==============================
+       Все переключатели живут здесь; состояния читаются CSS-ом через :has().
+       Кнопки neko/bongo дублируют старые id (#neko-toggle, #bongo-toggle) —
+       прежний JS синхронизирует их и запоминает выбор в localStorage. -->
+  <div class="dock" aria-label="Настройки страницы">
+    <div class="dock-inner">
+
+      <!-- тема -->
+      <div class="dock-group theme" role="group" aria-label="Тема оформления">
+        <span class="dock-cap">тема</span>
+        <label class="dbtn" for="th-light" title="Светлая тема" tabindex="0">🌸</label>
+        <label class="dbtn" for="th-dark"  title="Тёмная тема"  tabindex="0">🌙</label>
       </div>
 
-      <!-- группа 2: 2025 -->
-      <div class="group">
-        <button class="gbtn" type="button" aria-haspopup="true" aria-expanded="false">2025</button>
-        <ul class="submenu">
-          <li><a class="i-clips" href="https://clips2.kuromursk.dpdns.org/2025/">Клипы</a></li>
-          <li><a class="i-words" href="/scary2025/">Страшные истории</a></li>
-          <li><a class="i-anniv" href="/happy2025/">Поздравления КуроМур с ДР</a></li>
-          <li><a class="i-clips" href="/feb2025/">Февральские поздравляшки</a></li>
-        </ul>
+      <!-- питомцы -->
+      <div class="dock-group pets" role="group" aria-label="Питомцы">
+        <span class="dock-cap">питомцы</span>
+        <button class="dbtn pet-toggle on" id="neko-toggle" type="button" aria-pressed="true"
+                title="Показать/скрыть не́ко">🐈</button>
+        <button class="dbtn pet-toggle on" id="bongo-toggle" type="button" aria-pressed="true"
+                title="Показать/скрыть бонго-кота">🥁</button>
       </div>
 
-      <!-- группа 3: 2026 — материалы недавних событий -->
-      <div class="group">
-        <button class="gbtn" type="button" aria-haspopup="true" aria-expanded="false">2026</button>
-        <ul class="submenu">
-          <li><a class="i-clips" href="/clips/">Клипы</a></li>
-          <li><a class="i-scary" href="/halloween/">Ужастик от Рандомявзеров</a></li>
-          <li><a class="i-words" href="/halloweenwords/">Страшные истории</a></li>
-          <li><a class="i-anniv" href="/anniversary/">Поздравления на годовщину</a></li>
-          <li><a class="i-anniv" href="/happy2026/">Поздравления КуроМур с ДР</a></li>
-          <li><a class="i-clips" href="/feb2026/">Февральские поздравляшки</a></li>
-        </ul>
+      <!-- размеры: компактный вариант (S/M/L в одну строку) -->
+      <div class="dock-group sizes size-compact" role="group" aria-label="Размер питомцев">
+        <span class="dock-cap">размер</span>
+        <label class="dbtn" for="size-s" title="Маленькие питомцы" tabindex="0">🤏</label>
+        <label class="dbtn" for="size-m" title="Средние питомцы"   tabindex="0">🐾</label>
+        <label class="dbtn" for="size-l" title="Большие питомцы"   tabindex="0">🐘</label>
       </div>
 
-      <!-- группа 4: О КуроМур -->
-      <div class="group">
-        <button class="gbtn" type="button" aria-haspopup="true" aria-expanded="false">О КуроМур</button>
-        <ul class="submenu">
-          <li><a class="i-info" href="https://kuromurinfo.carrd.co/" target="_blank" rel="noopener">Контакты</a></li>
-          <li>
-            <a class="i-twitch" href="https://www.twitch.tv/kuromur" target="_blank" rel="noopener">
-              Стримы КуроМур
-              <span class="twitch-state" data-channel="kuromur"><span class="dot">⚪</span><span class="lbl">проверяем статус…</span></span>
-            </a>
-          </li>
-        </ul>
+      <!-- размеры: развёрнутый вариант (отдельно neko и бонго) -->
+      <div class="dock-group sizes size-wide" role="group" aria-label="Размер не́ко">
+        <span class="dock-cap">не́ко</span>
+        <label class="dbtn" for="neko-s" title="не́ко меньше" tabindex="0">−</label>
+        <label class="dbtn" for="neko-m" title="не́ко обычно" tabindex="0">•</label>
+        <label class="dbtn" for="neko-l" title="не́ко больше" tabindex="0">+</label>
       </div>
+      <div class="dock-group sizes size-wide" role="group" aria-label="Размер бонго-кота">
+        <span class="dock-cap">бонго</span>
+        <label class="dbtn" for="bongo-s" title="бонго меньше" tabindex="0">−</label>
+        <label class="dbtn" for="bongo-m" title="бонго обычно" tabindex="0">•</label>
+        <label class="dbtn" for="bongo-l" title="бонго больше" tabindex="0">+</label>
+      </div>
+
     </div>
   </div>
 
-  <footer>
-    kuromursk <span class="gitrev" id="gitrev"></span>
-    <br><span style="font-size:0.66rem;opacity:0.7">bongo cat: арт <a href="https://twitter.com/StrayRogue" target="_blank" rel="noopener" style="color:inherit">@StrayRogue</a> · мем <a href="https://twitter.com/DitzyFlama" target="_blank" rel="noopener" style="color:inherit">@DitzyFlama</a> · <a href="https://github.com/Externalizable/bongo.cat" target="_blank" rel="noopener" style="color:inherit">bongo.cat</a> (BSD-2)</span>
-  </footer>
-
-  <div class="pet-toggles">
-    <button class="pet-toggle on" id="neko-toggle" type="button" aria-pressed="true" title="Показать/скрыть кошку">
-      <span class="switch"></span>
-      <span class="label">не́ко</span>
-    </button>
-    <button class="pet-toggle on" id="bongo-toggle" type="button" aria-pressed="true" title="Показать/скрыть бонго-кота">
-      <span class="switch"></span>
-      <span class="label">бонго</span>
-    </button>
-  </div>
-
+  <!-- ======================================================================
+       JS. Всё — из оригинала страницы, плюс небольшой «клей» для новых
+       CSS-переключателей (табы, тема, размеры, фильтр). Питомцы и их
+       тумблеры не тронуты.
+       =================================================================== -->
   <script>
     /* ---------- neko: кошка, бегущая за курсором ----------
      * Спрайт: assets/neko.png — сетка 8×4 тайлов 32×32 (формат oneko, как в crgimenes/neko).
-     * Раскладка кадров взята из main.go оригинала (spriteSheetLayout).
      */
     (function () {
       const TILE = 32;
-      // [col, row] по spriteSheetLayout из github.com/crgimenes/neko
       const FRAMES = {
         up1: [1, 2], up2: [1, 3],
         upright1: [0, 2], upright2: [0, 3],
@@ -500,19 +412,16 @@
         scratch1: [5, 0], scratch2: [6, 0],
         wash: [7, 0],
       };
-      // угол (0..360, 0 = вправо) → имя спрайта; секторы по 45°
       const DIRS = ["right", "downright", "down", "downleft", "left", "upleft", "up", "upright"];
-      const SCALE = 1.5;             // 32 * 1.5 = 48px на экране
-      const SPEED = 168;            // px в СЕКУНДУ (привязка ко времени, а не к кадрам —
-                                    // на 90/120 Гц телефонах rAF чаще, раньше кошка неслась быстрее)
-      const IDLE_TO_SLEEP = 4000;   // мс до засыпания у остановившегося курсора
+      const SCALE = 1.5;            // базовый размер (CSS может переопределить через --neko-size)
+      const SPEED = 168;            // px в секунду — одинаково на 60/90/120 Гц
+      const IDLE_TO_SLEEP = 4000;
 
       const img = new Image();
       img.src = "assets/neko.png";
 
-      /* перекраска: белый корпус → тёмно-серый #909090 (контур/акценты не трогаем).
-       * Спрайт 4-цветный, поэтому после загрузки один раз заменяем белые пиксели. */
-      const GRAY = 144; // #909090
+      /* перекраска: белый корпус → тёмно-серый #909090 */
+      const GRAY = 144;
       const sprite = document.createElement("canvas");
       const sctx = sprite.getContext("2d", { willReadFrequently: true });
       function recolor() {
@@ -541,7 +450,6 @@
       let frameFlip = 0, lastFrame = 0, lastMove = 0, lastT = 0;
       let visible = true;
 
-      // фазы простоя, как в stayIdle() оригинала: бодрствование → чёс → умывание → зевок → сон
       const idlePhase = () => {
         const t = performance.now() - lastMove;
         if (t < 1200) return "awake";
@@ -561,18 +469,15 @@
       function tick(t) {
         requestAnimationFrame(tick);
         if (!visible) { lastT = t; return; }
-        // дельта времени: на любом refresh rate (60/90/120 Гц) скорость одинаковая
-        const dt = Math.min((t - lastT) / 1000, 0.05); // кап 50мс от пропущенных кадров
+        const dt = Math.min((t - lastT) / 1000, 0.05);
         lastT = t;
         const dx = mx - TILE / 2 - x, dy = my - TILE / 2 - y;
         const dist = Math.hypot(dx, dy);
 
         if (dist < TILE) {
-          // курсор рядом — фазы простоя
           if (t - lastFrame > 110) { lastFrame = t; frameFlip ^= 1; }
           draw(idlePhase());
         } else {
-          // бег к курсору: скорость px/сек × dt
           const step = Math.min(SPEED * dt, dist);
           x += dx / dist * step;
           y += dy / dist * step;
@@ -594,28 +499,28 @@
 
       // тумблер: скрыть/показать кошку (запоминается в localStorage)
       const toggle = document.getElementById("neko-toggle");
+      const petBox = document.getElementById("pet-neko");
       const KEY = "neko-enabled";
-      try {
-        if (localStorage.getItem(KEY) === "0") {
-          visible = false;
-          cat.style.display = "none";
-          toggle.classList.remove("on");
-          toggle.setAttribute("aria-pressed", "false");
-        }
-      } catch (e) { /* приватный режим — пропускаем */ }
 
-      toggle.addEventListener("click", () => {
-        visible = !visible;
-        cat.style.display = visible ? "block" : "none";
-        toggle.classList.toggle("on", visible);
-        toggle.setAttribute("aria-pressed", String(visible));
-        try { localStorage.setItem(KEY, visible ? "1" : "0"); } catch (e) {}
-      });
+      function setVisible(v) {
+        visible = v;
+        cat.style.display = v ? "block" : "none";
+        if (toggle) { toggle.classList.toggle("on", v); toggle.setAttribute("aria-pressed", String(v)); }
+        if (petBox) petBox.checked = v;             // синхронизируем CSS-переключатель
+        try { localStorage.setItem(KEY, v ? "1" : "0"); } catch (e) {}
+      }
+
+      try {
+        if (localStorage.getItem(KEY) === "0") setVisible(false);
+      } catch (e) { /* приватный режим */ }
+
+      if (toggle) toggle.addEventListener("click", () => setVisible(!visible));
+      if (petBox) petBox.addEventListener("change", () => setVisible(petBox.checked));
 
       img.onload = () => { recolor(); requestAnimationFrame(tick); };
     })();
 
-    /* ---------- bongo cat: мем-кот (арт @StrayRogue, логика по мотивам Externalizable/bongo.cat, BSD-2) ---------- */
+    /* ---------- bongo cat ---------- */
     (function () {
       const wrap = document.getElementById("bongo-wrap");
       const catEl = document.getElementById("bongo");
@@ -627,7 +532,6 @@
       if (!catEl) return;
 
       const S = "assets/bongo/";
-      // инструменты: спрайт + звуки (как в KeyEnum оригинала: 1..5 = левая лапа, 0,6..9 = правая)
       const INSTR = {
         bongo:    { img: "img/bongo.png",    keys: ["bongo0", "bongo1"] },
         keyboard: { img: "img/keyboard.png", keys: Array.from({ length: 10 }, (_, i) => "keyboard" + i) },
@@ -636,7 +540,7 @@
       let curInst = "bongo";
       instEl.style.backgroundImage = "url(" + S + INSTR.bongo.img + ")";
 
-      /* ----- звуки: Web Audio, лениво грузим и кэшируем mp3 ----- */
+      /* ----- звуки: Web Audio ----- */
       const AC = window.AudioContext || window.webkitAudioContext;
       let ctx = null, bufCache = {};
       function ensureCtx() {
@@ -673,13 +577,11 @@
       function hitKey(instr, keyIdx, note) {
         const def = INSTR[instr];
         if (!def) return;
-        // инструмент сменился — меняем спрайт (клавиши/тарелка → обратно бонго)
         if (curInst !== instr) {
           curInst = instr;
           instEl.style.backgroundImage = "url(" + S + def.img + ")";
         }
         playSound(def.keys[keyIdx % def.keys.length]);
-        // левая лапа: ноты 1..5; правая: 0, 6..9 (как в оригинале)
         const left = note >= 1 && note <= 5;
         strike(left ? pawL : pawR);
       }
@@ -688,9 +590,7 @@
         strike(mouth, 300);
       }
 
-      /* ----- клики по коту: ЛКМ = бонго, ПКМ = правое бонго, клик = мяу + фраза -----
-       * Реплики: текст ИЛИ «ноты» (цифры/пробелы) — кот сыграет их по клику на строку.
-       */
+      /* ----- реплики кота ----- */
       const LINES = [
         "Мяу!",
         "3 0 0 6 5 5 5 5 6 3 0 0 6 5 5 5 5 6 3",
@@ -703,14 +603,13 @@
 
       catEl.addEventListener("pointerdown", (e) => {
         e.stopPropagation();
-        ensureCtx(); // жест пользователя — разблокируем аудио
+        ensureCtx();
         if (e.button === 2) hitKey("bongo", 1, 9);
         else hitKey("bongo", 0, 0);
       });
       catEl.addEventListener("contextmenu", (e) => e.preventDefault());
       catEl.addEventListener("click", () => { meow(); speak(); });
 
-      /* сыграть строку нот: цифры 0-9, C = тарелка, . = пауза; 300 мс на ноту */
       const NOTE_MS = 300;
       function noteInfo(tok) {
         if (tok === ".") return { pause: true };
@@ -765,7 +664,6 @@
         }, TYPE_MS);
       }
 
-      // после печати: если реплика — ноты, добавляем кликабельную строку «сыграть»
       function finishSpeech(text) {
         const isNotes = /^[0-9C.\s]+$/.test(text.trim()) && /\d/.test(text);
         if (isNotes) {
@@ -787,24 +685,29 @@
         }
       }
 
-      /* ----- тумблер bongo cat: вкл/выкл, запоминается в localStorage ----- */
+      /* ----- тумблер bongo cat ----- */
       const bongoToggle = document.getElementById("bongo-toggle");
+      const petBox = document.getElementById("pet-bongo");
       const BKEY = "bongo-enabled";
       function setBongo(on) {
         wrap.classList.toggle("off", !on);
-        bongoToggle.classList.toggle("on", on);
-        bongoToggle.setAttribute("aria-pressed", String(on));
+        if (bongoToggle) {
+          bongoToggle.classList.toggle("on", on);
+          bongoToggle.setAttribute("aria-pressed", String(on));
+        }
+        if (petBox && petBox.checked !== on) petBox.checked = on;
         if (!on) { stopSongNotes(); say.classList.remove("show"); }
         try { localStorage.setItem(BKEY, on ? "1" : "0"); } catch (e) {}
       }
       try {
         if (localStorage.getItem(BKEY) === "0") setBongo(false);
       } catch (e) { /* приватный режим */ }
-      bongoToggle.addEventListener("click", () => {
-        setBongo(!bongoToggle.classList.contains("on")); // состояние по кнопке, не по wrap
+      if (bongoToggle) bongoToggle.addEventListener("click", () => {
+        setBongo(!bongoToggle.classList.contains("on"));
       });
+      if (petBox) petBox.addEventListener("change", () => setBongo(petBox.checked));
 
-      /* ----- клавиши: кот хлопает на любые нажатия (кроме полей ввода) ----- */
+      /* ----- клавиши ----- */
       addEventListener("keydown", (e) => {
         if (e.target && e.target.closest && e.target.closest("input, textarea, select")) return;
         if (wrap.classList.contains("off")) return;
@@ -816,9 +719,10 @@
       });
     })();
 
-    // версия коммита в футере: последняя SHA ветки main (публичный GitHub API)
+    /* ---------- версия коммита в футере ---------- */
     (function () {
       const el = document.getElementById("gitrev");
+      if (!el) return;
       fetch("https://api.github.com/repos/Akior/kuromursk/commits/main")
         .then(r => r.ok ? r.json() : Promise.reject())
         .then(j => {
@@ -830,81 +734,149 @@
         .catch(() => { /* без сети просто не показываем версию */ });
     })();
 
-    // Меню: курсор ушёл — список держится 2 секунды, потом сворачивается
+    /* ---------- табы разделов ----------
+       Состояние хранится в radio-инпутах (#tab-*): вся визуальная часть —
+       на CSS (:has и ~), JS занимается только a11y и клавиатурой. */
     (function () {
-      const CLOSE_DELAY = 900;
-      document.querySelectorAll(".group").forEach(g => {
-        const btn = g.querySelector(".gbtn");
-        let timer = null;
-        const open = () => {
-          clearTimeout(timer); timer = null;
-          // одновременно открыто только одно меню: соседнее закрывается сразу
-          document.querySelectorAll(".group").forEach(o => {
-            if (o !== g) { o.classList.remove("open"); o.querySelector(".gbtn").setAttribute("aria-expanded", "false"); }
-          });
-          g.classList.add("open");
-          btn.setAttribute("aria-expanded", "true");
-        };
-        const close = () => { g.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); };
-        // hover-логика только там, где ховер реально есть; на тач-скринах
-        // событие tap шлёт и мышиные события, и click — они конфликтуют
-        if (window.matchMedia("(hover: hover)").matches) {
-          g.addEventListener("mouseenter", open);
-          g.addEventListener("mouseleave", () => {
-            clearTimeout(timer);
-            timer = setTimeout(close, CLOSE_DELAY);
-          });
-        }
-        // клик по кнопке — мгновенный тумблер (для касаний): учитывая 5-секундную задержку увода
-        btn.addEventListener("click", () => {
-          if (g.classList.contains("open")) { clearTimeout(timer); timer = null; g.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); }
-          else open();
-        });
+      const tabs = ["2024", "2025", "2026", "kuro"];
+      const inputs = {}, labels = {}, panels = {};
+      tabs.forEach(id => {
+        inputs[id] = document.getElementById("tab-" + id);
+        labels[id] = document.getElementById("tl-" + id);
+        panels[id] = document.getElementById("p-" + id);
       });
+      const KEY = "kuro-tab";
 
-      // тап/клик мимо меню — мгновенно закрываем все открытые списки
-      document.addEventListener("click", (e) => {
-        if (e.target.closest(".group")) return;
-        document.querySelectorAll(".group.open").forEach(g => {
-          g.classList.remove("open");
-          g.querySelector(".gbtn").setAttribute("aria-expanded", "false");
+      function activate(id, focus) {
+        tabs.forEach(other => {
+          const on = other === id;
+          if (inputs[other]) inputs[other].checked = on;
+          if (labels[other]) {
+            labels[other].setAttribute("aria-selected", String(on));
+            labels[other].tabIndex = on ? 0 : -1;
+          }
+          if (panels[other]) {
+            panels[other].classList.toggle("is-active", on);
+            panels[other].hidden = !on;
+          }
         });
+        if (focus && labels[id]) labels[id].focus();
+        try { localStorage.setItem(KEY, id); } catch (e) {}
+      }
+
+      // старт: сохранённый таб, иначе 2026
+      let start = "2026";
+      try { const saved = localStorage.getItem(KEY); if (saved && inputs[saved]) start = saved; } catch (e) {}
+      tabs.forEach(id => { if (inputs[id] && inputs[id].checked) start = id; });
+      activate(start, false);
+
+      tabs.forEach((id, i) => {
+        const lbl = labels[id];
+        if (!lbl) return;
+        lbl.addEventListener("click", () => activate(id, false));
+        lbl.addEventListener("keydown", (e) => {
+          let next = null;
+          if (e.key === "ArrowRight" || e.key === "ArrowDown") next = tabs[(i + 1) % tabs.length];
+          else if (e.key === "ArrowLeft" || e.key === "ArrowUp") next = tabs[(i - 1 + tabs.length) % tabs.length];
+          else if (e.key === "Home") next = tabs[0];
+          else if (e.key === "End") next = tabs[tabs.length - 1];
+          else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); activate(id, false); return; }
+          if (next) { e.preventDefault(); activate(next, true); }
+        });
+        // инпут может переключиться и сам (клик по label) — синхронизируем
+        if (inputs[id]) inputs[id].addEventListener("change", () => { if (inputs[id].checked) activate(id, false); });
       });
     })();
 
-    // Динамический статус twitch-канала через DecAPI (CORS разрешён, ключи не нужны)
+    /* ---------- тема: запоминаем выбор, иначе — системная ---------- */
     (function () {
-      const el = document.querySelector(".twitch-state");
-      if (!el) return;
-      const ch = el.dataset.channel || "kuromur";
-      const dot = el.querySelector(".dot");
-      const lbl = el.querySelector(".lbl");
-      const setText = (t) => { if (lbl) lbl.textContent = t; };
+      const light = document.getElementById("th-light");
+      const dark = document.getElementById("th-dark");
+      const KEY = "kuro-theme";
+      function apply(mode) {
+        document.body.dataset.theme = mode;
+        if (light) light.checked = mode !== "dark";
+        if (dark) dark.checked = mode === "dark";
+        try { localStorage.setItem(KEY, mode); } catch (e) {}
+      }
+      let saved = null;
+      try { saved = localStorage.getItem(KEY); } catch (e) {}
+      const prefersDark = matchMedia("(prefers-color-scheme: dark)").matches;
+      apply(saved === "dark" || saved === "light" ? saved : (prefersDark ? "dark" : "light"));
+      if (light) light.addEventListener("change", () => light.checked && apply("light"));
+      if (dark) dark.addEventListener("change", () => dark.checked && apply("dark"));
+      matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
+        let s = null; try { s = localStorage.getItem(KEY); } catch (_) {}
+        if (!s) apply(e.matches ? "dark" : "light");
+      });
+    })();
+
+    /* ---------- размеры питомцев + режим дока: запоминаем ---------- */
+    (function () {
+      const groups = {
+        docksize:  ["size-s", "size-m", "size-l"],
+        nekosize:  ["neko-s", "neko-m", "neko-l"],
+        bongosize: ["bongo-s", "bongo-m", "bongo-l"],
+      };
+      Object.entries(groups).forEach(([name, ids]) => {
+        const KEY = "kuro-" + name;
+        let saved = null;
+        try { saved = localStorage.getItem(KEY); } catch (e) {}
+        const boxes = ids.map(id => document.getElementById(id)).filter(Boolean);
+        if (saved && boxes.some(b => b.id === saved)) {
+          boxes.forEach(b => { b.checked = b.id === saved; });
+        }
+        boxes.forEach(b => b.addEventListener("change", () => {
+          if (!b.checked) return;
+          try { localStorage.setItem(KEY, b.id); } catch (e) {}
+        }));
+      });
+      // «показать всё» — тоже запоминаем
+      const fAll = document.getElementById("f-all");
+      const fTab = document.getElementById("f-tab");
+      try { if (localStorage.getItem("kuro-filt") === "all" && fAll) { fAll.checked = true; fTab.checked = false; } } catch (e) {}
+      [fAll, fTab].forEach(b => b && b.addEventListener("change", () => {
+        if (!b.checked) return;
+        try { localStorage.setItem("kuro-filt", b.id === "f-all" ? "all" : "tab"); } catch (e) {}
+      }));
+      // плавный скролл к архиву
+      document.querySelectorAll("[data-scroll]").forEach(a => a.addEventListener("click", (e) => {
+        const t = document.querySelector(a.getAttribute("href"));
+        if (!t) return;
+        e.preventDefault();
+        t.scrollIntoView({ behavior: "smooth", block: "center" });
+      }));
+    })();
+
+    /* ---------- статус twitch-канала через DecAPI ----------
+       На странице два индикатора (чипс в hero и карточка «Стримы») — обновляем оба. */
+    (function () {
+      const nodes = document.querySelectorAll(".twitch-state");
+      if (!nodes.length) return;
+      const ch = nodes[0].dataset.channel || "kuromur";
+      const setAll = (dot, text) => nodes.forEach(el => {
+        const d = el.querySelector(".dot"), l = el.querySelector(".lbl");
+        if (d) { d.textContent = dot; d.classList.toggle("live", dot === "🟢"); }
+        if (l) l.textContent = text;
+      });
 
       fetch("https://decapi.me/twitch/uptime/" + ch)
         .then(r => r.text())
         .then(txt => {
-          if (/is offline/i.test(txt)) {
-            dot.textContent = "⚪";
-            setText("сейчас офлайн");
-          } else {
-            dot.textContent = "🟢";
-            return fetch("https://decapi.me/twitch/viewercount/" + ch)
-              .then(r => r.text())
-              .then(v => {
-                const n = parseInt(v, 10);
-                if (isNaN(n)) return setText("сейчас онлайн");
-                const forms = n % 10 === 1 && n % 100 !== 11 ? "зритель"
-                  : [2,3,4].includes(n % 10) && ![12,13,14].includes(n % 100) ? "зрителя"
-                  : "зрителей";
-                setText("сейчас онлайн · " + n.toLocaleString("ru-RU") + " " + forms);
-              });
-          }
+          if (/is offline/i.test(txt)) { setAll("⚪", "сейчас офлайн"); return; }
+          setAll("🟢", "сейчас онлайн");
+          return fetch("https://decapi.me/twitch/viewercount/" + ch)
+            .then(r => r.text())
+            .then(v => {
+              const n = parseInt(v, 10);
+              if (isNaN(n)) return;
+              const forms = n % 10 === 1 && n % 100 !== 11 ? "зритель"
+                : [2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100) ? "зрителя"
+                : "зрителей";
+              setAll("🟢", "онлайн · " + n.toLocaleString("ru-RU") + " " + forms);
+            });
         })
-        .catch(() => {
-          dot.textContent = "⚪";
-          setText("статус недоступен");
-        });
+        .catch(() => setAll("⚪", "статус недоступен"));
     })();
   </script>
 </body>
