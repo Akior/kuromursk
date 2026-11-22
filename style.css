@@ -946,14 +946,18 @@ body:has(#f-all:checked) .tab-ind { opacity: 0; }
   right: clamp(.6rem, 2vw, 1.4rem);
   bottom: clamp(.6rem, 2vw, 1.4rem);
   z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: .5rem;
 }
 
 /* скрытые radio/checkbox'ы дока живут внутри .dock (нужны для ~-селекторов) */
 .dock .sr-input { position: absolute; opacity: 0; pointer-events: none; }
 
-/* кнопка-«язычок» для сворачивания дока (видна только на телефонах) */
+/* кнопка-«язычок» для сворачивания дока в правый угол */
 .dock-handle {
-  display: none;
+  display: grid;
   place-items: center;
   width: 2.9rem; height: 2.9rem;
   padding: 0;
@@ -974,6 +978,9 @@ body:has(#f-all:checked) .tab-ind { opacity: 0; }
 .dock-handle:active { transform: scale(.92); }
 
 .dock-inner {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + .5rem);
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -986,6 +993,22 @@ body:has(#f-all:checked) .tab-ind { opacity: 0; }
   backdrop-filter: blur(18px) saturate(1.4);
   -webkit-backdrop-filter: blur(18px) saturate(1.4);
   box-shadow: var(--shadow-2);
+  width: max-content;
+  max-width: calc(100vw - 1.2rem);
+  max-height: min(65vh, 26rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  transform-origin: bottom right;
+  transition: opacity .22s, transform .25s var(--spring), visibility .22s;
+}
+
+/* свёрнутое состояние: остаётся только кнопка-«язычок» */
+.dock.collapsed .dock-inner {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateX(.4rem) scale(.94);
 }
 
 .dock-group {
@@ -1173,35 +1196,11 @@ body[data-theme="dark"], body:has(#th-dark:checked) {
   .bongo-wrap { --bw: .55rem; --bb: .7rem; }
   .foot { flex-direction: column; gap: .4rem; border-radius: 20px; }
 
-  /* док сворачивается вправо: остаётся только кнопка-«язычок» */
-  .dock {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: .5rem;
-  }
-  .dock-handle { display: grid; }
+  /* на телефоне группы дока идут колонкой */
   .dock-inner {
-    position: absolute;
-    right: 0;
-    bottom: calc(100% + .5rem);
     flex-direction: column;
     gap: .4rem;
     border-radius: 26px;
-    width: max-content;
-    max-width: calc(100vw - 1.2rem);
-    max-height: min(65vh, 26rem);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
-    transform-origin: bottom right;
-    transition: opacity .22s, transform .25s var(--spring), visibility .22s;
-  }
-  .dock.collapsed .dock-inner {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-    transform: translateX(.4rem) scale(.94);
   }
   .dock-group + .dock-group { box-shadow: 0 -1px 0 var(--line); }
   .dock-group { justify-content: center; }

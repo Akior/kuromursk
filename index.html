@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=7">
+  <link rel="stylesheet" href="style.css?v=8">
 </head>
 
 <body data-theme="auto">
@@ -824,15 +824,14 @@
       });
     })();
 
-    /* ---------- док на телефоне: сворачивается вправо ---------- */
+    /* ---------- док: сворачивается в правый угол ---------- */
     (function () {
       const dock = document.querySelector(".dock");
       const btn = document.getElementById("dock-toggle");
       if (!dock || !btn) return;
-      const mq = matchMedia("(max-width: 620px)");
 
       function sync() {
-        const open = !mq.matches || !dock.classList.contains("collapsed");
+        const open = !dock.classList.contains("collapsed");
         btn.setAttribute("aria-expanded", String(open));
         btn.title = open ? "Свернуть настройки" : "Открыть настройки";
       }
@@ -847,14 +846,13 @@
         dock.classList.toggle("collapsed");
         sync();
       });
-      // клик мимо дока или Esc — сворачиваем (только на телефоне)
+      // клик мимо дока или Esc — сворачиваем
       document.addEventListener("click", (e) => {
-        if (mq.matches && !dock.contains(e.target)) collapse();
+        if (!dock.contains(e.target)) collapse();
       });
       document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape" && mq.matches) { collapse(); btn.focus(); }
+        if (e.key === "Escape") { collapse(); btn.focus(); }
       });
-      if (mq.addEventListener) mq.addEventListener("change", sync);
       sync();
     })();
 
