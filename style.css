@@ -951,6 +951,28 @@ body:has(#f-all:checked) .tab-ind { opacity: 0; }
 /* скрытые radio/checkbox'ы дока живут внутри .dock (нужны для ~-селекторов) */
 .dock .sr-input { position: absolute; opacity: 0; pointer-events: none; }
 
+/* кнопка-«язычок» для сворачивания дока (видна только на телефонах) */
+.dock-handle {
+  display: none;
+  place-items: center;
+  width: 2.9rem; height: 2.9rem;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--glass-brd);
+  background: var(--glass);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  box-shadow: var(--shadow-2);
+  color: var(--text);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform .25s var(--spring), background .2s;
+}
+.dock-handle:hover { transform: translateY(-2px) scale(1.05); }
+.dock-handle:active { transform: scale(.92); }
+
 .dock-inner {
   display: flex;
   flex-wrap: wrap;
@@ -1146,14 +1168,40 @@ body[data-theme="dark"], body:has(#th-dark:checked) {
 
 /* телефоны */
 @media (max-width: 620px) {
-  body { padding-bottom: 11rem; }
+  body { padding-bottom: 5.5rem; }
   .card-main { padding-bottom: calc(var(--pad) + 4.6rem); border-radius: 24px; }
   .bongo-wrap { --bw: .55rem; --bb: .7rem; }
   .foot { flex-direction: column; gap: .4rem; border-radius: 20px; }
+
+  /* док сворачивается вправо: остаётся только кнопка-«язычок» */
+  .dock {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: .5rem;
+  }
+  .dock-handle { display: grid; }
   .dock-inner {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + .5rem);
     flex-direction: column;
     gap: .4rem;
     border-radius: 26px;
+    width: max-content;
+    max-width: calc(100vw - 1.2rem);
+    max-height: min(65vh, 26rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    transform-origin: bottom right;
+    transition: opacity .22s, transform .25s var(--spring), visibility .22s;
+  }
+  .dock.collapsed .dock-inner {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateX(.4rem) scale(.94);
   }
   .dock-group + .dock-group { box-shadow: 0 -1px 0 var(--line); }
   .dock-group { justify-content: center; }

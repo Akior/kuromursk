@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,600&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=6">
+  <link rel="stylesheet" href="style.css?v=7">
 </head>
 
 <body data-theme="auto">
@@ -353,8 +353,10 @@
        Все переключатели живут здесь; состояния читаются CSS-ом через :has().
        Кнопки neko/bongo дублируют старые id (#neko-toggle, #bongo-toggle) —
        прежний JS синхронизирует их и запоминает выбор в localStorage. -->
-  <div class="dock" aria-label="Настройки страницы">
-    <div class="dock-inner">
+  <div class="dock collapsed" aria-label="Настройки страницы">
+    <button class="dock-handle" id="dock-toggle" type="button" aria-controls="dock-inner" aria-expanded="false"
+            title="Настройки страницы" aria-label="Свернуть или развернуть панель настроек">⚙️</button>
+    <div class="dock-inner" id="dock-inner">
 
       <!-- тема -->
       <div class="dock-group theme" role="group" aria-label="Тема оформления">
@@ -820,6 +822,40 @@
         let s = null; try { s = localStorage.getItem(KEY); } catch (_) {}
         if (!s) apply(e.matches ? "dark" : "light");
       });
+    })();
+
+    /* ---------- док на телефоне: сворачивается вправо ---------- */
+    (function () {
+      const dock = document.querySelector(".dock");
+      const btn = document.getElementById("dock-toggle");
+      if (!dock || !btn) return;
+      const mq = matchMedia("(max-width: 620px)");
+
+      function sync() {
+        const open = !mq.matches || !dock.classList.contains("collapsed");
+        btn.setAttribute("aria-expanded", String(open));
+        btn.title = open ? "Свернуть настройки" : "Открыть настройки";
+      }
+      function collapse() {
+        if (!dock.classList.contains("collapsed")) {
+          dock.classList.add("collapsed");
+          sync();
+        }
+      }
+
+      btn.addEventListener("click", () => {
+        dock.classList.toggle("collapsed");
+        sync();
+      });
+      // клик мимо дока или Esc — сворачиваем (только на телефоне)
+      document.addEventListener("click", (e) => {
+        if (mq.matches && !dock.contains(e.target)) collapse();
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && mq.matches) { collapse(); btn.focus(); }
+      });
+      if (mq.addEventListener) mq.addEventListener("change", sync);
+      sync();
     })();
 
     /* ---------- размеры питомцев + режим дока: запоминаем ---------- */
